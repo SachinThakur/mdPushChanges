@@ -1,0 +1,40 @@
+/** Progressbar class css*/
+.progressbar {
+    width: 100% ;
+	margin: 55px auto 0 auto;
+    position: relative;
+    background-color: #020302 !important;
+    box-shadow: inset 7px 0px 58px #716f6f;
+}
+
+.proggress{
+	height: 44px;
+	width: 10px;
+	background-image: url('../images/finder-icons/rfq-images/progressbar-bg.jpg');
+    background-size: contain;
+}
+.progressMain{
+	width: 57%;
+	margin:0 auto;
+	position: relative;
+}
+.percentCount{
+	float:right;
+	margin-top: 10px;
+	clear: both;
+	font-weight: bold;
+	font-family: Arial;
+}
+.progressMain span {
+        width: 20px;
+    height: 20px;
+    background: #00748d;
+    display: inline-block;
+    border-radius: 50%;
+    position: absolute;
+    left: 200px;
+    right: 0;
+    margin: auto;
+    z-index: 99;
+    top: 12px;
+}

@@ -1,0 +1,7 @@
+name: Molecular Devices Quote
+type: module
+description: 'Request a Quote form for Molecular Devices'
+package: Molecular Devices
+version: '8.x-1.0'
+core: '8.x'
+project: 'md_quote'

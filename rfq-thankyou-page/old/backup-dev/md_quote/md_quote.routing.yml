@@ -1,0 +1,17 @@
+md_quote.page:
+  path: '/quote-request'
+  defaults:
+    _controller: '\Drupal\md_quote\Controller\RequestQuote::quote_request'
+    _title: 'Request for Quotation (RFQ), Request Quote'
+  requirements:
+    _permission: 'access content'
+
+md_quote.thanks:
+  path: '/quote-request-success'
+  defaults:
+    _controller: '\Drupal\md_quote\Controller\RequestQuote::quote_request_success'
+    _title: 'Thank You'
+  requirements:
+    _permission: 'access content'
+  options:
+    no_cache: 'TRUE'

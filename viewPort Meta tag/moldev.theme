@@ -1,0 +1,1035 @@
+<?php
+
+// File: THEMENAME.theme in your theme's root directory
+function moldev_preprocess(&$variables, $hook){
+    $variables['base_path'] = base_path();
+	$variables['base_path_url'] = \Drupal::request()->getpathInfo();
+	if(isset($_SERVER['HTTP_X_ORIGINALLANG'])){
+		$variables['local_value'] = $_SERVER['HTTP_X_ORIGINALLANG'];
+	}
+	
+}
+
+function moldev_preprocess_html(&$variables){	   
+    $noindex = [
+				'#tag' => 'meta',
+				'#attributes' => [
+					'name' => 'robots',
+					'content' => 'NOODP',
+				],
+		];
+    if($node = \Drupal::routeMatch()->getParameter('node')) { // Load the node entity from current route	
+		if(is_object($node)) {
+		$node_type = $node->type->target_id;
+		$nid = $node->id();
+			if($node_type!=''){ // && !is_numeric($node_type)   
+				$typecheck = "";		
+				if($node_type === 'multi_pages'){
+				  $ntype = $node->get('field_multi_pages_page_type')->value;
+				  $typecheck = "|| $ntype === 'leadership'";
+				}else{
+				 $typecheck='';
+				}		
+
+				if ($nid == '2648' || $node_type === 'contact' || $node_type === 'product_specification' .$typecheck) {  // Check if node type is...
+				
+				$noindex = [
+							'#tag' => 'meta',
+							'#attributes' => [
+								'name' => 'robots',
+								'content' => 'noindex, nofollow, NOODP',
+							],
+						   ];
+				}		       
+			}
+			
+		}
+	}
+	$variables['page']['#attached']['html_head'][] = [$noindex, 'noindex'];	
+}
+
+function moldev_preprocess_taxonomy_term(&$variables){
+    $term = $variables['term'];
+    $term_id = $term->get('tid')->value;
+    $vid_val = \Drupal\taxonomy\Entity\Term::load($term_id);
+        
+    $products = \Drupal::database()->select('taxonomy_term_data', 'ttd');     
+    $products->fields('ttd', array('vid'));
+    $products->condition('ttd.tid', $term_id);		
+    $product_ids = $products->execute()->fetchAll();
+	if(!empty($product_ids)){		
+		foreach($product_ids as $pd){
+			if($pd->vid=='product_groups'){
+				if(empty($term->get('field_setup_landing_page')->value)){
+					$query = \Drupal::database()->select('taxonomy_term__parent', 'th');  //taxonomy_term_hierarchy
+					$query->fields('th', array('parent_target_id'));
+					$query->condition('th.entity_id', $term_id);
+					$catparent = $query->execute()->fetchField();
+					$tid = '/taxonomy/term/'.$catparent;
+					$termid = $term->get('tid')->value;
+					$vid_val = \Drupal\taxonomy\Entity\Term::load($termid);
+					$val = $vid_val->name->value;
+					$options = ['absolute' => TRUE];	
+					$alias = \Drupal::service('path.alias_manager')->getAliasByPath($tid);
+					$response = new Symfony\Component\HttpFoundation\RedirectResponse($alias);
+					$response->send(); // don't send the response yourself inside controller and form.
+					return;			
+			    }
+				
+				if($term->label()=='Microplate Readers'){	
+					$backimg = '/themes/moldev/images/bannerBg.jpg';
+					$burl = base_path();
+					$subcateg = '';
+					$tree = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree('product_groups', $term_id, NULL, TRUE);         
+					if(!empty($tree)){     					  			
+						foreach ($tree as $term) {
+							$getcat = \Drupal\taxonomy\Entity\Term::load($term->get('tid')->value);	
+							$display_cat = $getcat->get('field_display_on_category')->value;
+							if($display_cat=='1'){                        				
+								$redi = str_replace(" ","-",$term->label());			
+								$tid = '/taxonomy/term/'.$term->get('tid')->value;
+								$urlalias = \Drupal::service('path.alias_manager')->getAliasByPath($tid);
+								$subcateg .= '<div class="col-xs-6 col-sm-6 col-md-4">
+									<a href="'.$urlalias.'" class="link_block">
+										<div class="link_ico"><img src="/themes/moldev/images/brain.png"></div>
+										<div class="link_detail">
+											<h3>'.$term->label().'</h3>
+											<p>'.substr($term->get('field_category_description')->value,0,100).'..</p>
+										</div>
+									 </a>
+								  </div>';					  
+							}
+						}							
+					}	
+					$variables['subcategorys'] = ['#markup' => $subcateg];
+				}
+				if($vid_val->get('field_display_overview')->value == 'Without Overview'){
+					$variables['checkcategory'] = 'yes';
+				}
+				else{
+					$variables['checkcategory'] = 'no';
+				}
+
+			}
+
+		}
+		
+	}
+
+	
+    $products = \Drupal::database()->select('taxonomy_term__field_category_related_product', 'crp');
+	$products->join('node_field_data','nfd','nfd.nid=crp.field_category_related_product_target_id');
+    $products->fields('crp', array('field_category_related_product_target_id'));
+    $products->condition('crp.entity_id', $term_id);
+	$products->condition('nfd.status', 1);
+    $product_ids = $products->execute()->fetchAll();
+	if(!empty($product_ids)){
+		$variables['catrelatedprod'] = 'Yes';
+	}
+	
+	//for category page related product..
+		$relatedcatproduct = \Drupal::database()->select('taxonomy_term__field_category_related_product', 'frc');
+        $relatedcatproduct->join('node_field_data', 'nfd', 'nfd.nid=frc.field_category_related_product_target_id');
+        $relatedcatproduct->leftjoin('node__field_is_series_product', 'sp', 'sp.entity_id=frc.field_category_related_product_target_id');
+        $relatedcatproduct->fields('frc', array('field_category_related_product_target_id'));
+        $relatedcatproduct->condition('sp.field_is_series_product_value', 1, '!=');
+        $relatedcatproduct->condition('frc.entity_id', $term_id);
+        $relatedcatproduct->condition('nfd.status', 1);
+        $relatedcatproduct_ids = $relatedcatproduct->execute()->fetchAll();
+        $product_counter = count($relatedcatproduct_ids);
+        $parent_categprod = '';
+        if (!empty($relatedcatproduct_ids)) {
+			foreach ($relatedcatproduct_ids as $pids) {						
+						$pid = $pids->field_category_related_product_target_id;					
+						$cateid = db_query("select field_product_type_value from node__field_product_type where entity_id='$pid'")->fetchField();
+						$relatedprod[$cateid][] = $pid;						
+			}
+			foreach($relatedprod as $key=>$product_ids){				
+				if($key=='1'){ $parent_name = 'Instruments';}elseif($key=='2'){ $parent_name = 'Assay Kits';}elseif($key=='3'){ $parent_name='Services';}elseif($key=='4'){ $parent_name='Labware';}elseif($key=='5'){ $parent_name='Media'; }elseif($key=='6'){ $parent_name = 'Software';}
+				$targetid = str_replace(" ","-",$parent_name);
+				
+			    $parent_categprod .= '<li><a href="#'.$targetid.'" id="'.$targetid.'" name="#'.$targetid.'" alt="'.$key.'" class="categrelatedproduct">'.$parent_name.'</a></li>';
+			}
+		}
+		$variables['cattaxurl'] = ['#markup' => $parent_categprod];
+		
+		
+			$categ_product = '';
+			$tree = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree('product_groups', $term_id, NULL, TRUE);         
+			if(!empty($tree)){     					
+			   $categ_product = '<li><a name="#viewall" id="viewall" alt="all" class="categproduct viewall">View All</a></li>';					
+				foreach ($tree as $term) {
+					$getcat = \Drupal\taxonomy\Entity\Term::load($term->get('tid')->value);			
+					$display_cat = $getcat->get('field_display_on_category')->value;
+					if($display_cat=='1'){                        				
+						$redi = str_replace(" ","-",$term->label());			
+						$categ_product .= '<li><a id="'.$redi.'" name="#'.$redi.'" alt="'.$term->id().'" class="categproduct">'.$term->label().'</a></li>';
+					}
+				}	
+			}
+			$variables['taxurl'] = ['#markup' => $categ_product];
+		
+}
+
+/**
+ * Implements hook_theme_suggestions_HOOK_alter().
+ */
+function moldev_theme_suggestions_page_alter(array &$suggestions, array $variables) {
+  if ($node = \Drupal::routeMatch()->getParameter('node')) {
+  	if(is_object($node)) {
+      $content_type = $node->bundle();
+      $suggestions[] = 'page__'.$content_type;
+    }
+  }
+   // Get Request Object.
+  $request = \Drupal::request();
+
+  // If there is HTTP Exception..
+  if ($exception = $request->attributes->get('exception')) {
+    // Get the status code.
+    $status_code = $exception->getStatusCode();
+    if (in_array($status_code, array(401, 403, 404))) {
+      $suggestions[] = 'page__' . $status_code;
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_node().
+ */
+function moldev_preprocess_node(&$variables) {   
+
+    global $base_url;  	  
+    if(isset($variables['node'])){
+        $node = $variables['node']; 
+        $cuurent_node_id = $node->id();//checking for leadership page
+        $node_type = $node->type->target_id;	
+        if($node_type == "landing_pages"){
+			$field_landing_page_formurl =  !empty($node->get('field_landing_page_formurl')->getValue()[0]['uri']) ? $node->get('field_landing_page_formurl')->getValue()[0]['uri']:'';
+			$cmp_id = \Drupal\Component\Utility\XSS::filter($_GET['cmp']);
+			if ($cmp_id) {
+				$field_landing_page_formurl_exlpode = explode('cmp=', $field_landing_page_formurl);
+				if (!empty($field_landing_page_formurl_exlpode[0])) {
+					$landing_page_formurl = $field_landing_page_formurl_exlpode[0].'cmp='.$cmp_id;
+				}
+				else{
+					$landing_page_formurl = $field_landing_page_formurl.'cmp='.$cmp_id;
+				}
+			}
+			else{
+				$landing_page_formurl = $field_landing_page_formurl;
+			}
+			$variables['#cache']['max-age'] = 0;
+			$variables['landing_page_formurl'] = $landing_page_formurl;
+		}
+		if($node_type === 'customer_story'){
+		    $variables['#cache']['max-age'] = 0;
+		    $quote_request_url = '/quote-request?customer_breakthrough_id='.$cuurent_node_id;
+		    $field_campaign_id =  !empty($node->get('field_campaign_id')->value) ? $node->get('field_campaign_id')->value:'';
+
+		    if ($field_campaign_id) {
+		    	 $quote_request_url =  $quote_request_url.'&cmp='.$field_campaign_id;
+		    }
+		    $variables['customer_story_products'] =  $quote_request_url;
+        }
+        if($node_type == "news" )
+        	$variables['#attached']['library'][] = 'moldev/event-page'; 
+
+        if($node_type == "events" ){         	 
+        	
+        	$variables['#attached']['library'][] = 'moldev/event-page'; 
+       		$variables['view_event_topBlock'] =views_embed_view('events','block_3');
+
+       		$variables['field_event_multiday'] = $node->field_event_multiday->value;
+       		$variables['eventStartDate'] = $node->field_event_start_date->value;      		
+       		$variables['eventEndDate']   = $node->field_event_end_date->value ;
+       		$variables['title']   		 = $node->title->value ;
+       		$variables['reserve_seat_bool']   = $node->field_event_reserve_seat->value ;
+       		$variables['reserve_seat_url']   = $node->field_reserve_seat_url->value ;
+       		
+       		$other_speakers =array();
+       		$other_speakers_id =array();
+       		$featured_speaker_id = '';
+       		if(!empty($node->get('field_event_featured_speaker')->target_id))
+       			$featured_speaker_id =$node->get('field_event_featured_speaker')->target_id; 
+
+       		if(!empty($node->get('field_event_speaker'))){
+       			foreach($node->get('field_event_speaker') as $speakers){
+       				if($featured_speaker_id != $speakers->target_id)
+       					$other_speakers_id[] = $speakers->target_id;
+       			}
+       		}      		
+       		      	      		
+       		$event_speaker_taxo = \Drupal::service('entity_type.manager')->getStorage("taxonomy_term")->loadTree('speakers');
+
+			$terms = array();		
+			
+			foreach($event_speaker_taxo as $speaker) {
+				//check about featured speaker from all speakers
+
+				if($featured_speaker_id == $speaker->tid){
+					$terms['featured_speaker'][] = array(
+				        '#tid' => $speaker->tid,
+				        '#speaker_name' => $speaker->name,
+				        '#speaker_title' => \Drupal::entityTypeManager()->getStorage('taxonomy_term')->load($speaker->tid)->get('field_event_speaker_title')->getValue()[0]['value'],
+				        '#speaker_img' => file_create_url(\Drupal::entityTypeManager()->getStorage('taxonomy_term')->load($speaker->tid)->get('field_speaker_image')->entity->uri->value),
+				    );
+
+				}
+
+				if( in_array($speaker->tid, $other_speakers_id) ){
+				    $terms['other_speakers'][] = array(
+				        '#tid' => $speaker->tid,
+				        '#speaker_name' => $speaker->name,
+				        '#speaker_title' => \Drupal::entityTypeManager()->getStorage('taxonomy_term')->load($speaker->tid)->get('field_event_speaker_title')->getValue()[0]['value'],
+				        '#speaker_img' => file_create_url(\Drupal::entityTypeManager()->getStorage('taxonomy_term')->load($speaker->tid)->get('field_speaker_image')->entity->uri->value),
+				    );
+				}
+			}	
+
+       		$variables['speaker_taxonomy'] = $terms;	
+       		//code for getting details of products
+			$other_products_id =array();
+       		$other_products =array();
+       		$all_products =array();       				
+       		//$featured_product_id =$node->get('field_featured_product')->target_id;  
+       		$featured_product_id_arr = array();
+       		foreach($node->get('field_featured_product') as $feature_product){
+       			$featured_product_id_arr[] = $feature_product->target_id;
+       		}
+       		  		
+       		if(!empty($node->get('field_event_product'))){
+       			foreach($node->get('field_event_product') as $products){
+       				//if($featured_product_id != $products->target_id)
+       				if(!in_array($products->target_id, $featured_product_id_arr))
+       					$other_products_id[] = $products->target_id;
+       			}
+       		}     		
+
+       		$productNode 	 = '';
+       		$feature_product = array();
+       		$other_products  = array();
+       		if(!empty($featured_product_id_arr)){
+
+       			foreach ($featured_product_id_arr as $key => $f_prod_id) {
+       				      			
+	       			$productNode = \Drupal\node\Entity\Node::load($f_prod_id);
+
+	       			if(!empty($productNode)){
+						$banner_image = $productNode->field_banner_image->entity->uri->value;
+						$feature_product[] = array(
+										'p_id' =>$f_prod_id,
+										'title'=>$productNode->title->value,
+										'description'=>$productNode->field_product_description->value,
+										'product_summary'=>$productNode->field_product_summary->value,
+										'banner_image'=>($banner_image!='')?file_create_url($banner_image):'',
+										//'path_1' => $productNode->toUrl(),
+										'path_1' => \Drupal::service('path.alias_manager')->getAliasByPath('/node/'.$f_prod_id),
+										);
+					}
+				}
+			}
+				
+			
+			$variables['feature_product'] = $feature_product;
+				if(!empty($other_products_id)){
+					foreach ($other_products_id as $key => $p_id) {
+						$productNode = \Drupal\node\Entity\Node::load($p_id);
+						if(!empty($productNode)){
+							$banner_image = $productNode->field_banner_image->entity->uri->value;
+							$other_products[] = array(
+												'p_id' =>$p_id,
+												'path_1' => \Drupal::service('path.alias_manager')->getAliasByPath('/node/'.$p_id),
+												'title'=>$productNode->title->value,
+												'description'=>$productNode->field_product_description->value,
+												'product_summary'=>$productNode->field_product_summary->value,
+												'banner_image'=>($banner_image!='')?file_create_url($banner_image):'',
+												);
+						}
+					}
+				}			
+       		
+
+			$merge_all_prod = array();
+			if(!empty($other_products) && !empty($feature_product) ){				
+				$merge_all_prod = array_merge($feature_product,$other_products);     			
+			}elseif(!empty($other_products) && empty($feature_product)) {
+				$merge_all_prod = $other_products;				 
+			}elseif(empty($other_products) && !empty($feature_product)) {
+				$merge_all_prod = $feature_product;				 
+			}
+
+			
+			$variables['other_products'] = $merge_all_prod;	
+			$product_info = array();
+			if(!empty($productNode)){
+				$variables['path_1']   = !empty($productNode->toUrl())? $productNode->toUrl() :''; 
+				$product_info['p_id']   = $p_id;
+				$product_info['title'] = $productNode->title->value;
+				$product_info['description'] = $productNode->field_product_description->value;
+				$product_info['product_summary'] = $productNode->field_product_summary->value;
+				$banner_image = $productNode->field_banner_image->entity->uri->value;
+				$product_info['banner_image']=($banner_image!='')?file_create_url($banner_image):'';		
+				$variables['productInfo'] = $product_info;
+			}
+			
+		} 
+
+    if($node_type == "products"){
+		
+    	$variables['shopify_products_rendered'] = \Drupal\md_shopify\Controller\ShopifyProduct::shopify_products($variables['node']);
+		$variables['shopify_multi_products_rendered'] = \Drupal\md_shopify\Controller\ShopifyProduct::shopify_multi_products($variables['node']);
+		
+            $catid = $node->get('field_category')->target_id;
+		    $cat_name = \Drupal\taxonomy\Entity\Term::load($catid);
+		     $variables['category_name'] = $cat_name->name->value;
+		     $variables['landing_page']  = $cat_name->field_setup_landing_page->value;
+		   
+                   $category_name_parent = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadParents($catid);
+                   $aliasManager = \Drupal::service('path.alias_manager');
+                   $category_alias = \Drupal::service('path.alias_manager')->getAliasByPath('/taxonomy/term/' .$catid);
+                   $variables['category_url'] = $category_alias;
+                   foreach($category_name_parent as $key => $val){
+				   
+                       $cat_name = \Drupal\taxonomy\Entity\Term::load($key);
+					 if(!empty($cat_name))  
+					 {				 
+					   $variables['category_parent_name'] = $cat_name->name->value;
+					   $variables['category_parent_id']   = $cat_name->tid->value;
+					   $variables['parent_landing_page'] = $cat_name->field_setup_landing_page->value;
+					  }  
+                       
+                       $aliasManager = \Drupal::service('path.alias_manager');
+                       $alias = $aliasManager->getAliasByPath('/taxonomy/term/' . $key);
+                       $variables['category_parent_url'] = $alias;
+                   }
+
+		    $imageUrl = !empty($node->get('field_product_gallery_image')->entity->uri->value)? $node->get('field_product_gallery_image')->entity->uri->value:'';
+			if($imageUrl!=''){
+			$img = file_create_url($imageUrl);
+
+			}
+			
+			$pid = $node->get('nid')->value; //nid of product..
+
+			$products = \Drupal::database()->select('node__field_product_reference', 'frc');
+			$products->join('node_field_data','nfd','nfd.nid=frc.entity_id');		
+			$products->fields('frc', array('field_product_reference_target_id'));
+			$products->condition('frc.entity_id', $pid);        
+			$products->condition('nfd.status', 1);
+			$product_ids = $products->execute()->fetchAll();
+			if(!empty($product_ids)){
+				$variables['consumblerelatedprod'] = 'Yes';
+			}
+		
+			$storyproducts = \Drupal::database()->select('node__field_customer_product', 'cp');
+			$storyproducts->join('node_field_data','nfd','nfd.nid=cp.entity_id');		
+			$storyproducts->fields('cp', array('entity_id'));
+			$storyproducts->condition('cp.field_customer_product_target_id', $pid);        
+			$storyproducts->condition('nfd.status', 1);
+			$story_ids = $storyproducts->execute()->fetchAll();
+			if(!empty($story_ids)){				
+				$variables['storyproducts'] = 'Yes';
+			}
+			
+			$promotionalprods = \Drupal::database()->select('node_field_data', 'nfd');
+			$promotionalprods->join('node__field_application_technology','pa','pa.entity_id=nfd.nid');	
+            $promotionalprods->leftjoin('node__field_product_type','pt','pt.entity_id=nfd.nid');			
+			$promotionalprods->fields('pa', array('field_application_technology_target_id'));
+			$promotionalprods->fields('pt', array('field_product_type_value'));
+			$promotionalprods->condition('pa.entity_id', $pid);        
+			$promotionalprods->condition('nfd.status', 1);
+			$promotional_ids = $promotionalprods->execute()->fetchAll();
+			if(!empty($promotional_ids)){
+				//$variables['promotionalproducts'] = 'Yes';
+				//$variables['promotionalproducts'] = count($promotional_ids);
+				 //&& count($promotional_ids)>2
+				foreach($promotional_ids as $promids){
+                $variables['promotionalproductstype'] = $promids->field_product_type_value;
+			    $producttype = $promids->field_product_type_value;
+				}				
+				if($producttype == '1'){
+					$variables['promotionalproducts'] = 'Yes';					
+				}elseif($promids->field_product_type_value != '1' && count($promotional_ids)>2){
+				    $variables['promotionalproducts'] = 'Yes';
+				}
+			}
+			
+			
+			$ceros = array('686','227');
+			$videogalprods = \Drupal::database()->select('node_field_data', 'nfd');
+			$videogalprods->join('node__field_product_resource_video_gal','vg','vg.entity_id=nfd.nid');	
+			$videogalprods->leftjoin('node__field_resources_content_type','ct','ct.entity_id=vg.field_product_resource_video_gal_target_id');				
+			$videogalprods->fields('vg', array('field_product_resource_video_gal_target_id'));
+			$videogalprods->condition('vg.entity_id', $pid); 
+            $videogalprods->condition('ct.field_resources_content_type_target_id', $ceros, 'IN');  			
+           // $videogalprods->condition('vg.bundle', 'products,resources');			
+			$videogalprods->condition('nfd.status', 1);
+			$videogalprods->orderBy('ct.field_resources_content_type_target_id', 'desc');
+		
+			$videogal_ids = $videogalprods->execute()->fetchAll();
+			if(!empty($videogal_ids)){
+				foreach($videogal_ids as $video_widyard){
+				$productNode = \Drupal\node\Entity\Node::load($video_widyard->field_product_resource_video_gal_target_id);
+				$video_type  = $productNode->get('field_resources_content_type')->entity->id();
+				$video_title = $productNode->get('title')->value;
+				if(!empty($productNode)){
+				  if($video_type=='686'){
+				  
+				  $rswidyrd[] = $productNode->get('body')->value.'~~'.$video_type.'~~'.$video_title;
+				       
+						} 
+					  else{
+				         $rswidyrd[] = $productNode->get('field_resources_vidyard_id')->value.'~~'.$video_type.'~~'.$video_title;
+						 
+					}
+					  
+				}else{
+				  $rswidyrd[] = '';					
+				}
+				}
+              
+				$variables['videogal_products'] = $rswidyrd;
+			}
+			
+			if(!empty($node->get('field_list_resources')->target_id)){ //get resources videos exist..
+			 $variables['prod_resource_videos'] = 'Yes';
+		    }
+		
+		
+		 if(!empty($node->get('field_application')->target_id)){
+			 $variables['overview_video'] = 'Yes';
+		 }
+		 
+		 
+		    $cate = $node->get('field_category')->target_id;
+		    $query = \Drupal::database()->select('taxonomy_term__parent', 'th'); //taxonomy_term_hierarchy
+			$query->fields('th', array('parent_target_id'));
+			$query->condition('th.entity_id', $cate);
+			$query->condition('th.parent_target_id', 0, '!=');
+			$query->groupBy('th.parent_target_id');
+			$catparent = $query->execute()->fetchAll();
+			foreach ($catparent as $parent) {	
+                $cat_name = \Drupal\taxonomy\Entity\Term::load($parent->parent);
+		        $variables['parent_category_name'] = $cat_name->name->value;				
+		    }
+			
+			$assetprod = \Drupal::database()->select('node__field_overview_product', 'op');
+			$assetprod->fields('op', array('field_overview_product_target_id'));
+			$assetprod->condition('op.entity_id', $pid);			
+			$assetprods = $assetprod->execute()->fetchAll();
+			if(!empty($assetprods)){
+				$variables['overviewproducts'] = 'Yes';				
+			}
+			
+			$relproducts = \Drupal::database()->select('node__field_product_reference', 'frc');
+			$relproducts->join('node_field_data','nfd','nfd.nid=frc.entity_id');
+			$relproducts->join('node__field_category','fc','fc.entity_id=frc.field_product_reference_target_id');
+			$relproducts->fields('frc', array('field_product_reference_target_id'));
+			$relproducts->condition('frc.entity_id', $pid);
+			$relproducts->condition('nfd.status', 1);
+			$relproducts->orderBy('fc.field_category_target_id', 'ASC');
+		    $relproducts->orderBy('nfd.created', 'ASC');
+			$relproduct_ids = $relproducts->execute()->fetchAll();
+			$parent_relprod  = '';
+			if (!empty($relproduct_ids)) {
+				foreach ($relproduct_ids as $relpids) {						
+							$pid = $relpids->field_product_reference_target_id;					
+							$cateid = db_query("select field_product_type_value from node__field_product_type where entity_id='$pid'")->fetchField();
+							$relatedprodpage[$cateid][] = $pid;						
+				}
+				foreach($relatedprodpage as $key=>$product_ids){				
+					if($key=='1'){ $parent_name = 'Instruments';}elseif($key=='2'){ $parent_name = 'Assay Kits';}elseif($key=='3'){ $parent_name='Services';}elseif($key=='4'){ $parent_name='Labware';}elseif($key=='5'){ $parent_name='Media'; }elseif($key=='6'){ $parent_name = 'Software';}
+					$targetid = str_replace(" ","-",$parent_name);
+					
+					$parent_relprod .= '<li><a catproduct="yes" href="#'.$targetid.'" id="'.$targetid.'" name="#'.$targetid.'" alt="'.$key.'" class="relatedproducts">'.$parent_name.'</a></li>';
+
+				}
+								
+				if(!empty($relatedprodpage)){
+					$catresult = array_keys($relatedprodpage);
+				}
+				
+				$prodcat_ids = array_shift($catresult);
+				
+				$pids = $node->get('nid')->value;
+
+				$relatedproduct_default1 = productrelatedprod($pids,$prodcat_ids);
+			}		
+			
+			$variables['relatedprodtaxurl'] = ['#markup' => $parent_relprod];
+			
+			
+			$prodid = $node->get('field_product_type')->value;
+			$catid = $node->get('field_category')->target_id;
+			if($prodid == '4'){
+			    $parentid = $catid;
+			}else{			
+			$query = \Drupal::database()->select('taxonomy_term__parent', 'th'); //taxonomy_term_hierarchy
+			$query->fields('th', array('parent_target_id'));
+			$query->condition('th.entity_id', $catid);
+			$catparent = $query->execute()->fetchField();
+				if($catparent!='0'){
+				 $parentid = $catparent;	
+				}else{
+				 $parentid = $catid;	
+				}	
+			}
+			
+			$prodcatbackimg_raw = \Drupal\taxonomy\Entity\Term::load($parentid);
+			if(!empty($prodcatbackimg_raw)){
+			 if($prodcatbackimg_raw->get('field_background_image')->entity->uri->value!=''){
+			  $variables['prodcatbackimg_uri'] = $prodcatbackimg_raw->get('field_background_image')->entity->uri->value;
+			  $variables['prodcatbackimg'] = file_create_url($prodcatbackimg_raw->get('field_background_image')->entity->uri->value);			  
+			 }
+			 $variables['prodcatbackcolor'] = $prodcatbackimg_raw->get('field_product_background_color')->value;
+             $variables['prodcatbackrepeat'] = $prodcatbackimg_raw->get('field_product_background_repeat')->value;	 
+			}
+			
+			 	
+			if(!empty($node->get('field_product_feature_interactiv')->target_id)){
+				$demolink       = '/node/'.$node->get('field_product_feature_interactiv')->target_id;
+				$featured_ceros = \Drupal\node\Entity\Node::load($node->get('field_product_feature_interactiv')->target_id);
+				$featured_ceros_val = $featured_ceros->get('body')->value;
+				$alias = \Drupal::service('path.alias_manager')->getAliasByPath($demolink);
+				//$response = new Symfony\Component\HttpFoundation\RedirectResponse($alias);
+			   $variables['interactivedemo_alias'] = $alias;
+			   $variables['featured_ceros_val']   = $featured_ceros_val;
+			 
+		    }	
+			
+			/* Resource tab Tabbing.. */			
+			$current_pid = $node->get('nid')->value; //nid of product..		
+			$products = \Drupal::database()->select('node__field_support_feature_resource', 'rct');
+			$products->join('node__field_resources_content_type','rc','rc.entity_id=rct.field_support_feature_resource_target_id');
+			$products->join('taxonomy_term_field_data','fd','fd.tid=rc.field_resources_content_type_target_id');			
+			$products->fields('fd', array('tid','name'));
+			$products->condition('rct.entity_id', $current_pid);
+			$products->condition('rc.bundle', 'resources');	
+			$products->groupBy('fd.tid,fd.name');
+			$product_ids = $products->execute()->fetchAll();
+			$prod_res_tab = '';
+			if (!empty($product_ids) || !empty($node->get('field_list_resources')->target_id)) {
+				$prod_res_tab = '<li><a name="#viewall" id="viewall" alt="all" class="product-resourcestab categproduct viewall">View All</a></li>';
+			}
+			if (!empty($product_ids)) {				
+				foreach ($product_ids as $relpids) {               
+				  $redi = str_replace(" ","-",$relpids->name);
+				  $prod_res_tab .= "<li><a id='".$relpids->tid."' name='#".$redi."' alt='".$relpids->tid."' class='product-resourcestab'>".$relpids->name."</a></li>"; //product-resources-'.$relpids->tid.'
+				
+				}				
+			}
+			if(!empty($node->get('field_list_resources')->target_id)){
+				  $prod_res_tab .= "<li><a id='videos' name='#res_videos' alt='videos and demo' class='product-resourcestab'>Videos and Demos</a></li>";
+			}
+				 	
+			
+			$variables['product_resource_tab'] = ['#markup' => $prod_res_tab];
+			
+			/* accessories and consumable page products filter */
+			$labware_product = '';
+			$labware_prod = db_query("SELECT node_field_data.langcode AS node_field_data_langcode, node_field_data.created AS node_field_data_created, node_field_data.nid AS nid
+			FROM
+			{node_field_data} node_field_data
+			INNER JOIN {node__field_product_type} node__field_product_type ON node_field_data.nid = node__field_product_type.entity_id AND node__field_product_type.deleted = '0'
+			WHERE ((node__field_product_type.field_product_type_value = '4')) AND ((node_field_data.status = '1') AND (node_field_data.type IN ('products')) AND (node_field_data.nid != '1332'))
+			ORDER BY node_field_data_created DESC")->fetchAll();
+			if(!empty($labware_prod)){
+				$labware_product = '<li><a name="#viewall" id="viewall" alt="all" child-id="all" class="labware_catproduct viewall">View All</a></li>';		
+				foreach($labware_prod as $prods){
+					$nload = \Drupal\node\Entity\Node::load($prods->nid);
+					$filter[$nload->get('field_category')->target_id] = $nload->get('field_category')->target_id;
+				}
+				foreach($filter as $filter_cat){				
+				$parent = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadParents($filter_cat);
+				$parent = reset($parent);			
+                $parentids = $parent->id();				
+				$getcate = \Drupal\taxonomy\Entity\Term::load($parentids);	
+				$lab_catid = $getcate->tid->value; 
+				$lab_catname = $getcate->name->value;
+				$redi = str_replace(" ","-",$lab_catname);	
+				$labware_product .= '<li><a id="'.$redi.'" name="#'.$redi.'" alt="'.$lab_catid.'" child-id="'.$filter_cat.'" class="labware_catproduct">'.$lab_catname.'</a></li>';
+				}			
+			}
+			$variables['labware_taxurl'] = ['#markup' => $labware_product];
+	   }
+	   
+	   
+	   if($node_type == 'applications'){
+		   $pid = $node->get('nid')->value; //nid of product..
+			$products = \Drupal::database()->select('node__field_application_reference', 'frc');
+			$products->join('node_field_data','nfd','nfd.nid=frc.entity_id');
+			$products->fields('frc', array('field_application_reference_target_id'));
+			$products->condition('frc.entity_id', $pid);
+			$products->condition('nfd.status', 1);
+			$products->condition('frc.bundle', 'applications');
+			$product_ids = $products->execute()->fetchAll();
+			$parent_relappli = '';
+			if (!empty($product_ids)) {
+				foreach ($product_ids as $relpids) {						
+							$pid = $relpids->field_application_reference_target_id;					
+							$cateid = db_query("select field_product_type_value from node__field_product_type where entity_id='$pid'")->fetchField();
+							$relatedprodpage[$cateid][] = $pid;						
+				}
+				foreach($relatedprodpage as $key=>$product_ids){				
+					if($key=='1'){ $parent_name = 'Instruments';}elseif($key=='2'){ $parent_name = 'Assay Kits';}elseif($key=='3'){ $parent_name='Services';}elseif($key=='4'){ $parent_name='Labware';}elseif($key=='5'){ $parent_name='Media'; }elseif($key=='6'){ $parent_name = 'Software';}
+					$targetid = str_replace(" ","-",$parent_name);
+					
+					$parent_relappli .= '<li><a catproduct="yes" href="#'.$targetid.'" id="'.$targetid.'" name="#'.$targetid.'" alt="'.$key.'" class="relatedproducts">'.$parent_name.'</a></li>';
+
+				}
+			}
+			$variables['relatedapplitaxurl'] = ['#markup' => $parent_relappli];
+			
+			 	
+			if(!empty($node->get('field_product_reference')->target_id)){
+			 $variables['app_res_videos_exist'] = 'Yes';
+		    }	
+			
+			/* Applciation Resource tab Tabbing.. */			
+			$current_pid = $node->get('nid')->value; //nid of applications..		
+			$products = \Drupal::database()->select('node__field_list_resources', 'rct');
+			$products->join('node__field_resources_content_type','rc','rc.entity_id=rct.field_list_resources_target_id');
+			$products->join('taxonomy_term_field_data','fd','fd.tid=rc.field_resources_content_type_target_id');			
+			$products->fields('fd', array('tid','name'));
+			$products->condition('rct.entity_id', $current_pid);
+			$products->condition('rct.bundle', 'applications');	
+			$products->condition('rc.bundle', 'resources');	
+			$products->groupBy('fd.tid,fd.name');
+			$product_ids = $products->execute()->fetchAll();
+			$appli_res_tab = '';
+			if (!empty($product_ids) || !empty($node->get('field_product_reference')->target_id)) {
+				$appli_res_tab = '<li><a name="#viewall" id="viewall" alt="all" class="applications-resourcestab categproduct viewall">View All</a></li>';
+			}
+			if (!empty($product_ids)) {				
+				foreach ($product_ids as $relpids) {               
+				  $redi = str_replace(" ","-",$relpids->name);
+				  $appli_res_tab .= '<li><a id="'.$relpids->tid.'" name="#'.$redi.'" alt="'.$relpids->tid.'" class="applications-resourcestab">'.$relpids->name.'</a></li>'; //applications-resources-'.$relpids->tid.'
+				
+				}				
+			}
+			if(!empty($node->get('field_product_reference')->target_id)){		
+				$appli_res_tab .= '<li><a id="videos" name="#res_videos" alt="videos and demo" class="applications-resourcestab">Videos and Demos</a></li>';
+			}
+				 	
+			
+			$variables['application_resource_tab'] = ['#markup' => $appli_res_tab];
+	    }
+	   
+	   
+	    if($node_type == "article"){
+				
+				$resource_query = \Drupal::entityQuery('taxonomy_term');
+				$resource_query->condition('vid', "content_type");
+				$resource_query->sort('name');
+				$resource_types = $resource_query->execute();
+				$terms = \Drupal\taxonomy\Entity\Term::loadMultiple($resource_types);
+				
+				$arr_exclude_types = array('367','368','369', '687','688', '327','228','815'); 
+				
+				foreach ($terms as $term){
+				
+				 $field_show_on_resources         =  $term->field_show_on_resources_page->getValue()[0];	
+				 
+				 if(!in_array($term->get('tid')->value,$arr_exclude_types)){
+				 
+				    $all_resource_types[]            = $term->toLink()->getText().'~~'.$term->get('tid')->value;
+					
+				   }
+				 if($field_show_on_resources['value']>0){
+					
+					$all_resource_types_images     = $term->get('field_resources_type_icon')->getValue();	
+					$field_resources_type_icon 	   = \Drupal\file\Entity\File::load($all_resource_types_images[0]['target_id']);
+					
+					 if($field_resources_type_icon){
+					  		$resources_type_icon_path 	   =  $field_resources_type_icon->getFileUri(); 
+					  		$other_resources_all_values[]  = $term->toLink()->getText().'~~'.file_create_url($resources_type_icon_path).'~~'.$term->get('tid')->value;
+					  } 
+				
+				 }
+			
+			}
+	           
+				    $variables['all_resource_types']  = $all_resource_types;
+			        $variables['all_other_resources'] = $other_resources_all_values;
+				
+          }
+		  
+		   if($node_type == "topics"){
+		   // $pid = $node->get('nid')->value; //nid of product..
+	/* Topics Resource tab Tabbing.. */			
+			$current_pid = $node->get('nid')->value; //nid of applications..		
+			$products = \Drupal::database()->select('node__field_list_resources', 'rct');
+			$products->join('node__field_resources_content_type','rc','rc.entity_id=rct.field_list_resources_target_id');
+			$products->join('taxonomy_term_field_data','fd','fd.tid=rc.field_resources_content_type_target_id');			
+			$products->fields('fd', array('tid','name'));
+			$products->condition('rct.entity_id', $current_pid);
+			$products->condition('rct.bundle', 'topics');	
+			$products->condition('rc.bundle', 'resources');	
+			$products->groupBy('fd.tid,fd.name');
+			$product_ids = $products->execute()->fetchAll();
+			$appli_res_tab = '';
+			if (!empty($product_ids)) {
+				$appli_res_tab = '<li><a name="#viewall" id="viewall" alt="all" class="applications-resourcestab categproduct viewall">View All</a></li>';
+				foreach ($product_ids as $relpids) {               
+				//if($relpids->name!='video'){
+				  $redi = str_replace(" ","-",$relpids->name);
+				  $appli_res_tab .= '<li><a id="'.$relpids->tid.'" name="#'.$redi.'" alt="'.$relpids->tid.'" class="applications-resourcestab">'.$relpids->name.'</a></li>'; //applications-resources-'.$relpids->tid.'
+				//}
+				}				
+			}
+			if(!empty($node->get('field_product_reference')->target_id)){		
+				$appli_res_tab .= '<li><a id="videos" name="#res_videos" alt="videos and demo" class="applications-resourcestab">Videos and Demos</a></li>';
+			}
+				 	
+			
+			$variables['application_resource_tab'] = ['#markup' => $appli_res_tab];
+			
+			if(!empty($node->get('field_product_reference')->target_id)){ //get resources videos exist..
+			 $variables['prod_resource_videos'] = 'Yes';
+		    }
+				
+		   
+			$relproducts = \Drupal::database()->select('node__field_product_reference', 'frc');
+			$relproducts->join('node_field_data','nfd','nfd.nid=frc.entity_id');
+			$relproducts->join('node__field_category','fc','fc.entity_id=frc.field_product_reference_target_id');
+			$relproducts->fields('frc', array('field_product_reference_target_id'));
+			$relproducts->condition('frc.entity_id', $current_pid);
+			$relproducts->condition('nfd.status', 1);
+			$relproducts->orderBy('fc.field_category_target_id', 'DESC');
+		    $relproducts->orderBy('nfd.created', 'ASC');
+			$relproduct_ids = $relproducts->execute()->fetchAll();
+			$parent_relprod  = '';
+			if (!empty($relproduct_ids)) {
+				foreach ($relproduct_ids as $relpids) {						
+							$pid = $relpids->field_product_reference_target_id;					
+							$cateid = db_query("select field_product_type_value from node__field_product_type where entity_id='$pid'")->fetchField();
+							$relatedprodpage[$cateid][] = $pid;						
+				}
+				foreach($relatedprodpage as $key=>$product_ids){				
+					if($key=='1'){ $parent_name = 'Instruments';}elseif($key=='2'){ $parent_name = 'Assay Kits';}elseif($key=='3'){ $parent_name='Services';}elseif($key=='4'){ $parent_name='Labware';}elseif($key=='5'){ $parent_name='Media'; }elseif($key=='6'){ $parent_name = 'Software';}
+					$targetid = str_replace(" ","-",$parent_name);
+					
+					$parent_relprod .= '<li><a catproduct="yes" href="#'.$targetid.'" id="'.$targetid.'" name="#'.$targetid.'" alt="'.$key.'" class="relatedproducts">'.$parent_name.'</a></li>';
+
+				}
+								
+				if(!empty($relatedprodpage)){
+					$catresult = array_keys($relatedprodpage);
+				}
+				
+				$prodcat_ids = array_shift($catresult);
+				
+				$pids = $node->get('nid')->value;
+
+				$relatedproduct_default1 = productrelatedprod($pids,$prodcat_ids);
+			}		
+			
+			$variables['relatedprodtaxurl'] = ['#markup' => $parent_relprod];
+				
+			
+		}
+		  
+		  
+		  
+		  if($node_type == "service_and_support"){
+			  
+			 if(!empty($node->get('field_application')->target_id)){
+				 $variables['overview_video'] = 'Yes';
+			 }
+			 
+			 $pid = $node->get('nid')->value; //nid of product..
+			 
+			$storyproducts = \Drupal::database()->select('node__field_customer_service', 'cp');
+			$storyproducts->join('node_field_data','nfd','nfd.nid=cp.entity_id');		
+			$storyproducts->fields('cp', array('entity_id'));
+			$storyproducts->condition('cp.field_customer_service_target_id', $pid);        
+			$storyproducts->condition('nfd.status', 1);
+			$story_ids = $storyproducts->execute()->fetchAll();
+			if(!empty($story_ids)){
+				$variables['storyservice'] = 'Yes';
+			}
+			
+			$videogalprods = \Drupal::database()->select('node_field_data', 'nfd');
+			$videogalprods->join('node__field_product_resource_video_gal','vg','vg.entity_id=nfd.nid');					
+			$videogalprods->fields('vg', array('field_product_resource_video_gal_target_id'));
+			$videogalprods->condition('vg.entity_id', $pid);  
+            $videogalprods->condition('vg.bundle', 'service_and_support');			
+			$videogalprods->condition('nfd.status', 1);
+			$videogal_ids = $videogalprods->execute()->fetchAll();
+			if(!empty($videogal_ids)){
+				foreach($videogal_ids as $video_widyard){
+				$productNode = \Drupal\node\Entity\Node::load($video_widyard->field_product_resource_video_gal_target_id);
+				$rswidyrd[] = $productNode->get('field_resources_vidyard_id')->value;
+				}
+				$variables['videogal_products'] = $rswidyrd;
+			}	
+			
+		  }
+	   
+	   
+	}
+
+	
+}
+
+
+/**
+ * Implements hook_theme_suggestions_HOOK_alter() for form templates.
+ * @param array $suggestions
+ * @param array $variables
+ */
+function moldev_theme_suggestions_block_alter(array &$suggestions, array $variables) {
+  // Block suggestions for custom block bundles.
+  if (isset($variables['elements']['content']['#block_content'])) {
+    array_splice($suggestions, 1, 0, 'block__bundle__' . $variables['elements']['content']['#block_content']->bundle());
+  }
+}
+
+/**
+ * Implements hook_preprocess_page().
+ */
+function moldev_preprocess_page(&$variables) { 
+    if(isset($variables['node'])){
+        $node = $variables['node'];	
+        if(!is_numeric($node)){          
+			$pid = $node->get('nid')->value;	  
+			$nodeload = \Drupal\node\Entity\Node::load($pid); 
+			$ptype = $nodeload->bundle();
+			if($ptype=='products'){
+				if ($nodeload->get('field_select_series')->target_id != '') {
+					$serieslink = '/node/'.$nodeload->get('field_select_series')->target_id;
+					$alias = \Drupal::service('path.alias_manager')->getAliasByPath($serieslink);
+					$response = new Symfony\Component\HttpFoundation\RedirectResponse($alias);
+					$response->send(); // don't send the response yourself inside controller and form.
+					return;	
+				}
+				
+			}
+			if($ptype == "resources"){
+				$have_detail_pages = array('216','311','692','328','686','688','327','227','228');
+				$pid 				= $node->get('nid')->value;
+				$nodeload 			= \Drupal\node\Entity\Node::load($pid);
+				$content_type 		= $nodeload->get('field_resources_content_type')->getValue()[0]['target_id'];
+				$asset_id          = $nodeload->get('field_resources_asset_tagging')->getValue()[0]['target_id'];
+				
+				if(!empty($asset_id)){
+				 $file_data         = \Drupal\file\Entity\File::load($asset_id);
+				 $asset_url         = file_create_url($file_data->getFileUri());
+
+					if(!in_array($content_type,$have_detail_pages)){
+					   $redirect_aaset = new Symfony\Component\HttpFoundation\RedirectResponse($asset_url);
+					   $redirect_aaset->send();
+						return;
+					}
+				}
+				
+			}
+        }
+    }  		
+}
+
+function moldev_page_attachments_alter(array &$page) {
+	global $base_url;
+	$current_page = \Drupal::request()->getpathInfo();	
+
+    $viewport = [
+      '#type' => 'html_tag',
+      '#tag' => 'meta',
+      '#attributes' => [
+        'name' => 'viewport',
+        //'content' => 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
+        'content' => 'width=device-width, initial-scale=1',
+      ],
+    ];
+    $page['#attached']['html_head'][] = [$viewport, 'viewport'];
+	
+	$canon_url = $base_url.''.$current_page;	
+	if($current_page == '/quote-request' || $current_page == '/resources-search' || $current_page == '/product-finder' || $current_page == '/contact' || $current_page == '/news' || $current_page == '/events-archived' || $current_page == '/events'){
+	$canon_url = $base_url.''.$current_page;	
+	
+    $viewport2 = [
+      '#type' => 'html_tag',
+      '#tag' => 'link',
+      '#attributes' => [
+        'rel' => 'canonical',
+        'href' => $canon_url,
+      ],
+    ];
+    $page['#attached']['html_head'][] = [$viewport2, 'canonical'];	
+	}
+
+	// Define an array of META tags to remove.
+    $unset_meta = [
+      'title', // Meta name "title"     
+    ];
+    // Check values and delete.
+    foreach ($page['#attached']['html_head'] as $key => $value) {
+      if (in_array($value[1], $unset_meta)) unset($page['#attached']['html_head'][$key]);
+    } 
+  
+}
+
+
+function productrelatedprod($pid,$tid){
+			$html = '';
+			global $base_url;
+	        $products = \Drupal::database()->select('node__field_product_reference', 'frc');
+			$products->join('node_field_data','nfd','nfd.nid=frc.entity_id');
+			$products->join('node__field_category','fc','fc.entity_id=frc.field_product_reference_target_id');
+			$products->join('node__field_product_type', 'pt', 'pt.entity_id=frc.field_product_reference_target_id');
+			$products->fields('frc', array('field_product_reference_target_id'));
+			$products->condition('frc.entity_id', $pid);
+			$products->condition('pt.field_product_type_value', $tid);
+			$products->condition('nfd.status', 1);
+			$products->orderBy('fc.field_category_target_id', 'ASC');
+		    $products->orderBy('nfd.created', 'ASC');
+			$product_ids = $products->execute()->fetchAll();
+			if (!empty($product_ids)) {				
+				foreach ($product_ids as $pids) {
+					$nodeload = \Drupal\node\Entity\Node::load($pids->field_product_reference_target_id);
+					$title = $nodeload->getTitle();				
+					$body = trim_text($nodeload->get('field_product_summary')->value, $length = 100, $ellipses = true, $strip_html = true);				
+					$catid = $nodeload->get('field_category')->target_id;
+					$cat_name = \Drupal\taxonomy\Entity\Term::load($catid);
+					$var_cate = '<label class="pro-label">' . $cat_name->name->value . '</label>';				
+					$product_image = \Drupal\image\Entity\ImageStyle::load('related_products')->buildUrl($nodeload->field_banner_image->entity->getFileUri());
+					if ($nodeload->get('field_select_series')->target_id != '') {
+						$serieslink = $nodeload->get('field_select_series')->target_id;
+					} else {
+						$serieslink = $nodeload->id();
+					}
+					$alias = \Drupal::service('path.alias_manager')->getAliasByPath('/node/' . $serieslink);
+					if($nodeload->get('field_product_type')->value == '1'){ //1 = instrument
+					$compare_section = '<span class="compare">
+										Compare (<span class="comparecountno">0</span>) 
+										<div class="filter-checkbox"><span><input type="checkbox" name="procomp[]" class="procamp procampcheckbox' . $nodeload->id() . '" id="' . $title . '" value="' . $nodeload->id() . '" alt="'.$catid.'"><span class="icheck"></span></span></div>
+									</span>';
+					}else{
+						$compare_section ='';
+					}
+					
+					$html .= '<div class=" item col-xs-12 col-sm-4">
+						<div class="pro-container">
+							'.$var_cate.'
+							<a href="' . $base_url . $alias . '"><div class="prothumb"><img src="' . $product_image . '">  </div>
+							<div class="pro-details">
+								<h3>' . $title . '</h3>
+								<p>' . $body . '</p>
+							</div></a>
+							<div class="compare-box">
+							<a href="' . $base_url . $alias . '" class="linkBtn">Details<span class="icon-icon_link"></span></a>
+							'.$compare_section.'
+							</div>
+							
+						</div>
+				 </div>';
+				}			
+			} else {
+				$html .= '<p class="text-center marg-tp-30">No Product Found.</p>';
+			}
+	return $html;
+}
+
+
+

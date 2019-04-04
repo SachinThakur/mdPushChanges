@@ -1,0 +1,12 @@
+md_quote:
+  version: 8.4.5 
+  js:   
+    js/rfq.js: {}       
+  dependencies:
+    - core/jquery
+  css:
+    css/rfq.css: {}
+   
+      
+      
+    

@@ -1,0 +1,18 @@
+<?php
+
+/**
+ * @file
+ * Module file for the md_quote module.
+ */
+/**
+ * Implements hook_theme().
+ */
+function md_quote_theme($existing, $type, $theme, $path) {
+  return [
+    'quote_request_thanks' => [
+      'variables' => [
+        'quote_related_products' => [],
+      ],
+    ],
+  ];
+}

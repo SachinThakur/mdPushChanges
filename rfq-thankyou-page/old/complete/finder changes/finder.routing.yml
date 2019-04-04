@@ -1,0 +1,171 @@
+# In order to to create pages it is necessary to define routes for them. A route
+# maps a URL path to a controller. It defines with what function or method will
+# be called when a URL is accessed. The following lines defines three of them
+# for this module.
+
+# Menu items corresponding to these URLs are defined separately in the
+# page_example.menu_links.yml file.
+
+# If the user accesses http://example.com/?q=examples/page_example, the routing
+# system will look for a route with that path. In this case it will find a
+# match, and execute the _controller callback. In this case the callback is
+# defined as a classname
+# ("\Drupal\page_example\Controller\PageExampleController") and a method
+# ("description").
+
+# Access to this path is not restricted. This is notated as _access: 'TRUE'.
+
+categorypage_product.content: 
+   path: '/categorypage_product/{tid}/{base_fullurl}'
+   defaults:
+   # Calls the list controller, defined in the annotation of the product entity.       
+    _controller: '\Drupal\finder\Controller\FinderController::categorypage_product'
+   requirements: 
+    _permission: 'access content'
+
+parentcategoryproducttype.content: 
+   path: '/parentcategory-producttype'
+   defaults: 
+    _controller: '\Drupal\finder\Controller\FinderController::get_parent_category_product_type'
+   requirements: 
+    _permission: 'access content' 
+    
+rfqmultiproducts.content: 
+   path: '/rfq-multiproducts'
+   defaults: 
+    _controller: '\Drupal\finder\Controller\FinderController::get_rfq_multiproducts'
+   requirements: 
+    _permission: 'access content'     
+
+categorypage_relatedproduct.content: 
+   path: '/categorypage_relatedproduct/{tid}/{base_fullurl}'
+   defaults:
+   # Calls the list controller, defined in the annotation of the product entity.   
+    _controller: '\Drupal\finder\Controller\FinderController::categorypage_relatedproduct'
+   requirements: 
+    _permission: 'access content'    
+
+productpage_specifications.content: 
+   path: '/productpage_specifications/{base_fullurl}'
+   defaults:
+   # Calls the list controller, defined in the annotation of the product entity.   
+    _controller: '\Drupal\finder\Controller\FinderController::productpage_specifications'
+   requirements: 
+    _permission: 'access content'  
+
+product_finder.content: 
+   path: '/product-finder'
+   defaults:
+   # Calls the list controller, defined in the annotation of the product entity.   
+    _controller: '\Drupal\finder\Controller\FinderController::product_finder'
+    _title: 'Product Finder'
+   requirements: 
+    _permission: 'access content'     
+    
+product_finder_filter.content: 
+   path: '/productfinder/readmode/{parent}'
+   defaults:
+   # Calls the list controller, defined in the annotation of the product entity.   
+    _controller: '\Drupal\finder\Controller\FinderController::product_finder_readmode'
+    _title: 'Product Finder'
+   requirements: 
+    _permission: 'access content'      
+    
+product_finder_subcat.content: 
+   path: '/productfinder/subcat/{cat}'
+   defaults:
+   # Calls the list controller, defined in the annotation of the product entity.   
+    _controller: '\Drupal\finder\Controller\FinderController::productfinder_subcat'
+   requirements: 
+    _permission: 'access content'  
+    
+product_finder_allfilter.content: 
+   path: '/productfinder/filtercat/{parent}/{readmode}/{prodtype}/{specifi}/{firststep_cat}'
+   defaults:
+   # Calls the list controller, defined in the annotation of the product entity.   
+    _controller: '\Drupal\finder\Controller\FinderController::productfinder_filtercat'
+   requirements: 
+    _permission: 'access content'  
+    
+product_compare.content: 
+   path: '/product-compare'
+   defaults:
+   # Calls the list controller, defined in the annotation of the product entity.   
+    _controller: '\Drupal\finder\Controller\FinderController::product_compare'
+   requirements: 
+    _permission: 'access content'   
+    
+product_readmodetype.content: 
+   path: '/productfinder/readmodetype/{parent}/{readmode}/{prodtype}'
+   defaults:
+   # Calls the list controller, defined in the annotation of the product entity.   
+    _controller: '\Drupal\finder\Controller\FinderController::readmode_type'
+   requirements: 
+    _permission: 'access content'   
+    
+product_finderspecification.content: 
+   path: '/productfinder/readmodespecifi/{parent}/{readmode}/{specifi}'
+   defaults:
+   # Calls the list controller, defined in the annotation of the product entity.   
+    _controller: '\Drupal\finder\Controller\FinderController::readmode_specifi'
+   requirements: 
+    _permission: 'access content'     
+    
+productpage_relatedclone.content: 
+   path: '/productpage_relatedproduct/{tid}/{base_fullurl}'
+   defaults:
+   # Calls the list controller, defined in the annotation of the product entity.   
+    _controller: '\Drupal\finder\Controller\ViewController::productpage_relatedclone'
+   requirements: 
+    _permission: 'access content'       
+    
+requestquote.content: 
+   path: '/rfq'
+   defaults:
+   # Calls the list controller, defined in the annotation of the product entity.   
+    _controller: '\Drupal\finder\Controller\ViewController::new_request_quote'
+    _title: 'RFQ'
+   requirements: 
+    _permission: 'access content'       
+    
+requestquote_subcat.content: 
+   path: '/requestquote/subcat/{cat}'
+   defaults:
+   # Calls the list controller, defined in the annotation of the product entity.   
+    _controller: '\Drupal\finder\Controller\ViewController::request_quote_subcat'
+    _title: 'RFQ'
+   requirements: 
+    _permission: 'access content'      
+
+
+requestquote_products.content: 
+   path: '/requestquote/filtercat/{parent}/{firststep_cat}'
+   defaults:
+   # Calls the list controller, defined in the annotation of the product entity.   
+    _controller: '\Drupal\finder\Controller\ViewController::request_quote_products'
+    _title: 'RFQ'
+   requirements: 
+    _permission: 'access content'      
+    
+categorypage_rfq.content: 
+   path: '/categorypage-rfq'
+   defaults: 
+    _controller: '\Drupal\finder\Controller\FinderController::get_categorypage_rfq'
+   requirements: 
+    _permission: 'access content' 
+
+product_finder_rfq.form: 
+   path: '/productfinder/get_request_form'
+   defaults:
+   # Calls the list controller, defined in the annotation of the product entity.   
+    _controller: '\Drupal\finder\Controller\FinderController::quote_request_form'
+   requirements: 
+    _permission: 'access content'     
+    
+labware_cat_products.content: 
+   path: '/labware-cat-products/{tid}'
+   defaults:
+   # Calls the list controller, defined in the annotation of the product entity.       
+    _controller: '\Drupal\finder\Controller\ViewController::labware_cat_products'
+   requirements: 
+    _permission: 'access content'           

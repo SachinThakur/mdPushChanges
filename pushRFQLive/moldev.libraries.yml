@@ -1,0 +1,198 @@
+front-page:
+  js:  
+      js/raphael.min.js: {}
+      js/particles.js: {}
+      js/slide-animation.js: {}
+      js/image-shuffle.js: {}
+      js/jquery.touchSwipe.min.js: {}
+      js/index.js: {}
+
+global-styling:
+  css:
+    theme:
+      css/proxima.css: {}
+      css/style.css: {}
+      css/bootstrap.min.css: {}      
+      css/bootstrap-select.min.css: {}
+      css/font-awesome.min.css: {}
+      css/icomoon.css: {}
+      css/swatches.css: {}
+      css/owl.carousel.min.css: {}
+      css/header.css: {}
+      css/herobanner.css: {}
+      css/common.css: {}
+      css/image-shuffle.css: {}
+      css/featured-carousel.css: {}
+      css/footer.css: {}
+      css/custom.css: {}
+      css/print_spec.css: {}
+      css/about-us.css: {}
+      #css/bootstrap-select.min.css: {}
+      #css/appDetails.css: {}
+      #css/gated.css: {}
+      #css/product-finder.css: {}
+      #css/contact.css: {} 
+  js:  
+      # js/custom.js: {}
+      js/modernizr.custom.js: {}
+      # js/jquery.nicescroll.min.js: {}
+      js/header.js: {}
+      js/bootstrap-select.min.js: {}
+      js/owl.carousel.min.js: {}
+      js/jquery.matchHeight.js: {}
+      js/jquery.touchSwipe.min.js: {}  
+      js/common.js: {}
+      js/custom.js: {}
+      js/product.js: {}           
+      #js/jquery.scrolling-tabs.js: {}      
+      #js/tab_scroll.js: {} 
+  dependencies:
+    - core/jquery
+    # - core/drupal.ajax
+    # - core/drupal
+    # - core/drupalSettings
+    # - core/jquery.once
+    
+    
+contact-page:
+  css:
+    theme:
+      css/gated.css: {}
+      css/contact.css: {}      
+      css/appDetails.css: {} 
+  js:  
+    js/contactus.js: {}
+    js/accordion.js: {}
+  dependencies:
+    - core/jquery
+  
+rfq-page:
+  css:
+    theme:
+      css/rfq.css: {}
+      css/jquery.lineProgressbar.css: {}
+  dependencies:
+    - core/jquery
+  js:  
+    js/rfq.js: {}
+    js/jquery.lineProgressbar.js: {}   
+    js/custom-progressbar.js: {}   
+ 
+appdetail-page:
+  css:
+    theme:
+      css/appDetails.css: {}
+      #css/TimeCircles.css: {}
+      css/jquery.classycountdown.min.css: {}
+  js:  
+      js/appDetails.js: {}
+      #js/TimeCircles.js: {}
+      js/jquery.classycountdown.min.js: {}
+      js/jquery.knob.js: {}
+      js/jquery.throttle.js: {}
+
+about-us:
+  css:
+    theme:
+      css/about-us.css: {}
+ 
+
+leadership:
+  css:
+    theme:
+      css/leadership.css: {}
+      #css/jquery.mCustomScrollbar.min.css: {}
+  js:
+      #js/jquery.mCustomScrollbar.js: {}
+
+career:
+  css:
+    theme:
+      css/career.css: {}
+  js:  
+      js/image-shuffle.js: {}
+
+productdetail-page:
+  css:
+    theme:
+      css/jquery.scrolling-tabs.css: {}
+  js:        
+      js/slide-animation.js: {}     
+      
+product-category-page:
+  css:
+    theme:
+      css/appDetails.css: {}
+  js:  
+      js/appDetails.js: {}
+      js/slide-animation.js: {}      
+
+event-page:
+  css:
+    theme:
+      css/appDetails.css: {}
+      #css/bootstrap.min.css: {}
+      css/events.css: {}
+      css/custom.css: {}
+  js:  
+      js/slide-animation.js: {}
+      js/appDetails.js: {}
+      js/addthis_widget.js: {}
+      js/events.js: {}
+      
+
+events-view:
+  version: 1.x
+  css:
+    theme:
+      #css/events.css: {}     
+  js:
+    js/events.js: {}    
+  dependencies:
+    - core/jquery
+
+resources-page:
+  css:
+    theme:
+      css/appDetails.css: {}
+      css/resources.css: {}
+  js:  
+      js/slide-animation.js: {}
+      js/image-shuffle.js: {}
+resources-detail:
+  css:
+    theme:
+      css/gated.css: {}
+      css/appDetails.css: {}
+customer-story:
+  css:
+    theme:
+      css/customerStory.css: {}
+      css/resources.css: {}
+      
+global-components:
+  Version: 1.x
+  css:
+    theme:
+      css/sm-core-css.css: {}
+      css/base.css: {}
+      css/font-awesome.css: {}
+      css/custom-style.css: {}
+      css/custom-media.css: {}
+  dependencies:
+    - core/jquery
+    - core/drupal.ajax
+    - core/drupal
+    - core/drupalSettings
+    - core/jquery.once
+
+campaign:
+  css:
+    theme:
+      css/campaign.css: {}
+  js:
+    js/campaign-pages.js: {}    
+  dependencies:
+    - core/jquery
+
+  

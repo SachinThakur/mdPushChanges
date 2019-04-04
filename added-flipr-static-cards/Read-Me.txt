@@ -1,0 +1,68 @@
+Step 1.) Create 4 new arrays element (17,18,19,20) after $cards[16]['img'] line.
+		
+		/* Newly added three static column*: 29-03-2019 */
+		$cards[17]['name'] = 'FLIPR Calcium Assay kits';
+        $cards[17]['url'] = '/products/assay-kits/gpcrs/flipr-calcium-assay-kits';		
+        $cards[17]['img'] = '/themes/moldev/images/cards-images/assay-kits-static-blocks/flipr_calcium_assay_kits.png';
+        $cards[17]['desc'] = 'FLIPR® Calcium Assay Kits are the platform of choice for measuring changes of intracellular...';
+		
+		$cards[18]['name'] = 'FLIPR Potassium Assay kits';
+        $cards[18]['url'] = '/products/assay-kits/ion-channel/flipr-potassium';
+        $cards[18]['img'] = '/themes/moldev/images/cards-images/assay-kits-static-blocks/flipr_potassium_assay_kits.jpg';
+        $cards[18]['desc'] = 'The FLIPR® Potassium Assay Kit measures functional activity of ligand- and voltage-gated potassium...';
+		
+		$cards[19]['name'] = 'FLIPR Membrane Potential Assay kits';
+        $cards[19]['url']  = '/products/assay-kits/ion-channel/flipr-membrane-potential';
+        $cards[19]['img']  = '/themes/moldev/images/cards-images/assay-kits-static-blocks/flipr_membrane_potential_assay_kits.png';
+        $cards[19]['desc'] = 'The FLIPR® Membrane Potential Assay Kits deliver homogenous fluorescence-based formulations for...';
+		
+		$cards[20]['name'] = 'Customization and Automation Services';
+		$cards[20]['title'] = 'Services';
+		
+        $cards[20]['url']  = '/service-support/customization-and-automation';
+        $cards[20]['img']  = '/themes/moldev/images/cards-images/assay-kits-static-blocks/flipr-services-assay-kits.jpg';
+        $cards[20]['desc'] = 'Complete solutions for fully integrated lab automation workflows';
+		
+
+Step 2.) Pass new array element only for flipr related product array. 
+
+		/* FLIPR */
+        $r_products['545']['cat'] = array(17,18,19,20);
+        $r_products['545']['prdct'] = array(17,18,19,20);
+		
+Step 3.) added below code after this line  -  $alt = 427;
+	
+				/*check assay kit flipr condition*/
+				$assay_kit_flipr = array(17,18,19,20);				
+				if(in_array($obj_key,$assay_kit_flipr)){
+					$title = isset($cards[$obj_key]['title'])?$cards[$obj_key]['title']:'';
+					$html .= '<div class="item full_cards col-xs-12 col-sm-4">
+							<div class="pro-container">';
+					
+					if(!empty($title)){
+						$html .='<label class="pro-label">' . $cards[$obj_key]['title'] . '</label>';	
+					}
+						
+					$html .='<a class="'.$unique_class.'" alt="'.$alt.'" href="#"><div class="prothumb"><img src="'.$cards[$obj_key]['img'].'" alt="AquaMax Microplate Washer"></div>
+							<div class="pro-details">
+								<h3>'.$cards[$obj_key]['name'].'</h3>
+								<p>'.$cards[$obj_key]['desc'].'</p>
+							</div>
+							</a>
+							<div class="compare-box">
+								<a href="'.$cards[$obj_key]['url'].'" class="linkBtn">Details<span class="icon-icon_link"></span></a>
+							</div>
+							</div>
+						</div>';
+						
+				}else{
+                $html .= '<div class="item full_cards col-xs-12 col-sm-4">
+							<div class="pro-container" style="background:url(' . $cards[$obj_key]['img'] . ') no-repeat center; background-size:cover;">							
+							<label class="pro-label">' . $cards[$obj_key]['name'] . '</label>		
+							<a class="'.$unique_class.'" alt="'.$alt.'" href="' . $cards[$obj_key]['url'] . '"><div class="prothumb"></div></div>
+							</a>							
+						</div>';
+				}
+				
+Step 4.) move static-flipr-images folder images  to  this path ( code/themes/moldev/images/cards-images/assay-kits-static-blocks )
+

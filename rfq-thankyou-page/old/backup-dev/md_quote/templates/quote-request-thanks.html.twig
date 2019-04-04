@@ -1,0 +1,71 @@
+<div class="quote-request-thanks">
+	<div class="section-image white-text cover-bg short_banners" style="background-image: url('{{ base_path ~ directory }}/images/contact-banner.jpg')">
+		<div class="container">
+			<div class="verticaly-middle bannerInnerPages">
+				<ol class="breadcrumb breadcrumbBanner hidden-xs marg-bt-10" itemscope="" itemtype="http://schema.org/BreadcrumbList">
+					<li itemprop="itemListElement"  itemscope=""
+      itemtype="http://schema.org/ListItem"><a itemprop="item" href="/"><span itemprop="name">Home</span></a><meta itemprop="position" content="1" /></li>
+                    <li itemprop="itemListElement"  itemscope=""
+      itemtype="http://schema.org/ListItem"><a itemprop="item" href="/quote-request"><span itemprop="name">Request Quote</span></a><meta itemprop="position" content="2" /></li>
+					<li itemprop="itemListElement"  itemscope=""
+      itemtype="http://schema.org/ListItem" class="active"><span itemtitle="Thank You" itemprop="name">Thank You</span><meta itemprop="position" content="3" /></li>
+				</ol>
+				<div class="row">
+					<div class="col-md-12"> 
+						<h1 class="hero-heading">Thank you for submitting your Request for Quote</h1>
+						{% if quote_related_products.relatedproducts.selected_products %}
+						    <p class="marg-tp-10">We’ve received your request for the following Product(s) :</p>
+							<ul>
+								{% for selected_product in quote_related_products.relatedproducts.selected_products %}
+								<li>{{selected_product.title}}</li>
+						 		{% endfor %}
+							</ul>
+					 	{% elseif quote_related_products.catrelatedproducts.selected_cat %}	
+					 	    <p class="marg-tp-10">We’ve received your request for the following Product(s) :</p>
+							<ul><li>{{ quote_related_products.catrelatedproducts.selected_cat}}</li></ul>
+						{% endif %}
+						<p class="marg-tp-20">We have sent you an email to confirm your details and a sales rep will be contacting you shortly.</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="container">
+		<div class="row">
+			<div class="col-xs-12">
+				{% if quote_related_products.relatedproducts.data|length or quote_related_products.catrelatedproducts.data|length  %}
+					<h3 class="text-center">Customers also frequently purchased:</h3>
+				{% endif %}
+				<div class="pro_car_wrap noPadd_car finder_row clearfix">
+					<div class="pro_car clearfix owl-carousel">
+						{% if quote_related_products.relatedproducts.data %}
+					 		{% for relatedproduct in quote_related_products.relatedproducts.data %}
+							 	<div class="item col-xs-12 col-sm-4">
+									<div class="pro-container">
+										{% if relatedproduct.product_image %}
+											<div class="prothumb"><img src="{{relatedproduct.product_image}}"></div>
+										{% endif %}
+										<div class="pro-details">
+											<div class="product-finder-desc">
+												<a href="{{relatedproduct.productalias}}" class="linkBtn">{{relatedproduct.title}}<span class="icon-icon_link"></span></a>
+												<p>{{relatedproduct.body}}</p>
+											</div>
+										</div>
+										<div class="compare-box">
+											<a target="_blank" href="/quote-request?pid={{relatedproduct.nodeid}}" class="linkBtn">Request Quote<span class="icon-icon_link"></span></a>
+											<a href="{{relatedproduct.productalias}}" class="linkBtn">Details<span class="icon-icon_link"></span></a>
+									    </div>
+									</div>
+								</div>
+							{% endfor %}
+						{% elseif quote_related_products.catrelatedproducts.data %}	
+							{{ quote_related_products.catrelatedproducts.data|raw }}
+						{% endif %}
+					</div>
+				</div>
+				<p class="text-center marg-bt-15">For other region contact numbers please <a title="Contact Us" href="/contact">click here >></a></p>
+			</div>
+		</div>
+	</div>
+</div>
+

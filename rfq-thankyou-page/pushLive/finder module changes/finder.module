@@ -1,0 +1,409 @@
+<?php
+
+use Drupal\Component\Utility\SafeMarkup;
+use Drupal\node\Entity\Node;
+use Drupal\Core\Form\FormBase;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Form;
+use Drupal\user\Entity\User;
+use Drupal\group\Entity\GroupContent;
+use Drupal\Core\Routing;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Drupal\taxonomy\Entity\Term;
+use Drupal\taxonomy;
+use Drupal\taxonomy\Entity\Vocabulary;
+use Drupal\Core\Access\AccessResultInterface;
+
+
+function finder_js_settings_alter(array &$settings, \Drupal\Core\Asset\AttachedAssetsInterface $assets) {
+  $current_path = \Drupal::service('path.current')->getPath();
+  $settings['path']['curentPath'] = $current_path;
+}
+/*
+function finder_page_attachments(array &$attachments) {
+   $attachments['#attached']['library'][] = 'finder/finder';
+}
+*/
+
+/*
+ * hook_form_alter()
+ */
+
+function finder_form_alter(&$form, &$form_state, $form_id) {
+   if ($form_id == 'node_products_edit_form') {
+    $path = \Drupal::request()->getpathInfo();
+    $arg = explode('/', $path);
+    $pid = $arg[2];
+    if(is_numeric($pid)){
+    $prodet = Node::load($pid);	
+    if($prodet->get('field_product_type')->value=='1' || $prodet->get('field_product_type')->value=='4' || $prodet->get('field_product_type')->value=='6'){
+        $catid = $prodet->get('field_category')->target_id;
+        $products = array();
+     		
+	$query = \Drupal::database()->select('taxonomy_term__parent', 'th');	//taxonomy_term_hierarchy
+        $query->fields('th', array('parent_target_id'));    
+        $query->condition('th.entity_id', $catid);
+        $catparent = $query->execute()->fetchField();
+        $query_par = \Drupal::database()->select('taxonomy_term__parent', 'thpar');		
+            $query_par->fields('thpar', array('parent_target_id'));    
+            $query_par->condition('thpar.entity_id', $catparent);
+            $query_par->condition('thpar.parent_target_id', 0,'!=');
+            $catparentmain = $query_par->execute()->fetchField();
+            if($catparentmain!=''){
+                    $cate[] = $catparentmain;
+            }
+            if($catparent!=''){
+                    $cate[] = $catparent;
+            }							
+	  
+        $query1 = \Drupal::database()->select('node__field_product_reference', 'fp');	
+        $query1->leftjoin('node__field_product_specification_head','sh','sh.entity_id=fp.entity_id');
+        $query1->leftjoin('node__field_display_status', 'ds', 'ds.entity_id=fp.entity_id');   		
+	$query1->leftjoin('node_field_data','nfd','nfd.nid=fp.entity_id');
+        $query1->fields('fp', array('entity_id'));    
+	$query1->fields('sh', array('field_product_specification_head_target_id'));   
+        //$query1->condition('ds.field_display_status_value', 2); // 2 = display in product specification..		
+        $query1->condition('fp.field_product_reference_target_id', $pid);
+	$query1->orderBy('nfd.created','ASC');
+        $products_list = $query1->execute()->fetchAll();				
+        foreach($products_list as $plist){       		
+	    if($plist->field_product_specification_head_target_id!=''){
+               $products[$plist->field_product_specification_head_target_id][] = $plist->entity_id;
+	    }
+	}
+        $query2 = \Drupal::database()->select('node__field_category', 'fc');		
+	$query2->leftjoin('node__field_category_reference', 'cr','cr.field_category_reference_target_id=fc.field_category_target_id');	
+        $query2->leftjoin('node__field_product_specification_head','sh','sh.entity_id=cr.entity_id');	
+	$query2->leftjoin('node_field_data','nfd','nfd.nid=cr.entity_id');
+        $query2->leftjoin('node__field_display_status', 'ds', 'ds.entity_id=cr.entity_id');   				
+        $query2->fields('cr', array('entity_id'));    
+	$query2->fields('sh', array('field_product_specification_head_target_id')); 
+        //$query2->condition('ds.field_display_status_value', 2); // 2 = display in product specification..			
+        $query2->condition('fc.entity_id', $pid);
+	$query2->orderBy('nfd.created','ASC');
+        $cat_list = $query2->execute()->fetchAll();
+        foreach($cat_list as $clist){       
+            if($clist->field_product_specification_head_target_id!=''){		
+                $products[$clist->field_product_specification_head_target_id][] = $clist->entity_id; 
+	    } 
+	}		
+
+        $query3 = \Drupal::database()->select('node__field_category_reference', 'nfc');	
+        $query3->leftjoin('node__field_product_specification_head','sh','sh.entity_id=nfc.entity_id');
+	$query3->leftjoin('node_field_data','nfd','nfd.nid=nfc.entity_id');
+        $query3->leftjoin('node__field_display_status', 'ds', 'ds.entity_id=nfc.entity_id');   				
+        $query3->fields('nfc', array('entity_id'));    
+	$query3->fields('sh', array('field_product_specification_head_target_id'));
+        //$query3->condition('ds.field_display_status_value', 2); // 2 = display in product specification..				
+        $query3->condition('nfc.field_category_reference_target_id', $cate, 'IN');
+	$query3->orderBy('nfd.created','ASC');
+        $parent_list = $query3->execute()->fetchAll();
+        foreach($parent_list as $pplist){      
+            if($pplist->field_product_specification_head_target_id!=''){	
+		$products[$pplist->field_product_specification_head_target_id][] = $pplist->entity_id;
+	    }			
+	}		
+       
+        $products = array_filter($products);	
+
+        if(!empty($products)){	
+         $form['feature_group'] = array(
+            '#type' => 'fieldset',
+            '#title' => t('Features/Specifications'),
+            '#tree' => TRUE,
+            '#weight' => 23,
+            '#collapsible' => TRUE, // Added
+            '#collapsed' => FALSE,  // Added				  
+        );		
+				
+    foreach($products as $key=>$pros){		
+        $cat_name = \Drupal\taxonomy\Entity\Term::load($key);				
+        $form['feature_group']['product_features'][$key] = array( 
+            '#prefix' => '<h3>'.$cat_name->name->value.'</h3><hr>',			        
+        );
+            foreach($pros as $key2=>$pp){					
+                if($pp!=''){					               
+                    $pnode = Node::load($pp);			
+                    $fid = $pnode->id();
+                    $label = $pnode->getTitle();	
+
+                     $display_pos = array();
+                     foreach ($pnode->get('field_display_status') as $value) {
+                            $display_pos[] = $value->value;
+                     }
+
+                    $default_feature = \Drupal::database()->select('product_features', 'efc');
+                    $default_feature->fields('efc');
+                    $default_feature->condition('efc.product_id', $pid);
+                    $default_feature->condition('efc.feature_id', $fid);	
+                    $default_feature->condition('efc.status', 1);						
+                    $def_feature = $default_feature->execute()->fetchAll();	   
+
+                    foreach($def_feature as $default_feat){
+                            $feavalue[$pnode->id()] = $default_feat->feature_value;
+                            $feacomparison[$pnode->id()] = $default_feat->feature_comparison;												
+                    }
+                            $form['#tree'] = TRUE;
+
+                            $form['feature_group']['product_features'][$pnode->id()] = array( 	
+                               '#type' => 'textarea',
+                               '#default_value' => $feavalue[$pnode->id()],
+                               '#title' => t($label), 
+                               '#attributes' => array('class' => array('feature-field'), 'id' => array('product-feature-'.$pnode->id())), 
+                            );
+
+                            $form['feature_group']['product_features_comparison'][$pnode->id()] = array(
+                              '#type' => 'checkbox',					  	  
+                              '#default_value' => $feacomparison[$pnode->id()],
+                              '#title' => t($label.' Comparison'),
+                              '#attributes' => array('class' => array('feature-field-comparison'), 'id' => array('product-feature-comparison-'.$pnode->id())), 
+                            );
+
+                    $feavalue=array();
+                    $feacomparison=array();					
+            }
+      }				            
+    }		
+
+}				
+    $form['actions']['submit']['#submit'][] = 'product_edit_form_save';  
+     }		
+   }
+   
+    }
+	
+}
+
+/*
+ * Refere hook_form_alter
+ * use to save the feature info and product content type
+ */
+ 
+function product_edit_form_save(&$form, $form_state) {	
+    $gpMember = array();
+    $values = $form_state->getValues(); 
+	
+    $profeature_ids = $values['feature_group']['product_features'];	
+    $profeature_compare_ids = $values['feature_group']['product_features_comparison'];    
+    $pids = $values['nid'];
+    $db = \Drupal::database();	
+	
+	if(!empty($profeature_ids)){
+            foreach($profeature_ids as $key=>$fproduct){
+                $mm[$key] = $fproduct;	
+                $mk[$key] = $fproduct;
+
+                $query = \Drupal::database()->select('product_features', 'd');             		
+                $query->fields('d', array('id'));
+                $query->condition('d.feature_id', $key);
+                $query->condition('d.product_id', $pids);
+                //$query->condition('d.feature_value', $fproduct);
+                $parent_list = $query->execute()->fetchAll();
+                if(!empty($parent_list)){
+                    $product_features_query = db_update('product_features')
+                                ->fields(array('feature_value' => $fproduct, 'status' => 1))
+                                ->condition('product_id', $pids)
+                                ->condition('feature_id', $key)
+                                ->execute();	
+                }else{					
+                    $insertid = db_insert('product_features')->fields(
+                                array(
+                                'product_id' => $pids,
+                                'feature_id' => $key,
+                                'feature_value' => $fproduct,
+                                'feature_comparison' =>'0',
+                                ))->execute();
+
+                }		
+            }
+	}
+	
+	if(!empty($values['feature_group']['product_features_comparison'])){	
+		foreach($values['feature_group']['product_features_comparison'] as $key2=>$fproductcompar){			
+			        $query2 = \Drupal::database()->select('product_features', 'd');	
+                    $query2->fields('d', array('id'));
+                    $query2->condition('d.feature_id', $key2);
+                    $query2->condition('d.product_id', $pids);
+                    $parent_list2 = $query2->execute()->fetchAll();
+                    if(!empty($parent_list2)){
+
+                     db_update('product_features')				
+                            ->fields(array('feature_comparison' => $fproductcompar, 'status' => 1))
+                            ->condition('product_id', $pids)
+                            ->condition('feature_id', $key2)					
+                            ->execute();
+
+                    }
+                    else {	
+
+                    $mm2 = db_insert('product_features')
+                      ->fields(array(
+                        'product_id' => $pids,
+                        'feature_id' => $key2,
+                        'feature_value' => '0',
+                        'feature_comparison' => $fproductcompar,									
+                      ))
+                    ->execute();	
+                    }
+                    $query2 = \Drupal::database()->select('product_features', 'd');			
+                    $query2->fields('d', array('id'));
+                    $query2->condition('d.feature_id', $key2);
+                    $query2->condition('d.product_id', $pids);
+                    $parent_list2 = $query2->execute()->fetchAll();
+                    if(!empty($parent_list2)){
+
+                     db_update('product_features')				
+                            ->fields(array('feature_comparison' => $fproductcompar, 'status' => 1))
+                            ->condition('product_id', $pids)
+                            ->condition('feature_id', $key2)					
+                            ->execute();
+
+                    }
+                    else {	
+
+                    $mm2 = db_insert('product_features')
+                      ->fields(array(
+                        'product_id' => $pids,
+                        'feature_id' => $key2,
+                        'feature_value' => '0',
+                        'feature_comparison' => $fproductcompar,									
+                      ))
+                    ->execute();	
+                    }
+				
+		}	
+	}
+	
+}
+
+/**
+ * trims text to a space then adds ellipses if desired
+ * @param string $input text to trim
+ * @param int $length in characters to trim to
+ * @param bool $ellipses if ellipses (...) are to be added
+ * @param bool $strip_html if html tags are to be stripped
+ * @return string 
+ */
+function trim_text($input, $length, $ellipses = true, $strip_html = true) {
+    //strip tags, if desired
+    if ($strip_html) {
+        $input = strip_tags($input);
+    }
+  
+    //no need to trim, already shorter than trim length
+    if (strlen($input) <= $length) {
+        return $input;
+    }
+  
+    //find last space within length
+    $last_space = strrpos(substr($input, 0, $length), ' ');
+    $trimmed_text = substr($input, 0, $last_space);
+  
+    //add ellipses (...)
+    if ($ellipses) {
+        $trimmed_text .= '...';
+    }
+  
+    return $trimmed_text;
+}
+
+    function move_to_top(&$array, $key) {
+        $temp = array($key => $array[$key]);
+        unset($array[$key]);
+        $array = $temp + $array;
+    }
+
+/**
+ * Implements hook_entity_presave().
+ */
+function finder_entity_presave(Drupal\Core\Entity\EntityInterface $entity) {
+
+  if ($entity->getEntityType()->id() == 'node' && $entity->bundle() == 'product_specification') {
+        $update_specs =array();
+	$insert_specs =array();
+	$delete_specs =array();
+	
+	$specid = $entity->id();
+	
+	$db_chapter = db_query("SELECT * FROM product_features WHERE feature_id='$specid'");
+	if(!empty($db_chapter)){
+		foreach($db_chapter as $infor){
+		$db_chapter_info[] = $infor->product_id;
+		} 
+	}
+	foreach($entity->get('field_product_reference') as $vl){		
+		$req_prodrefernce[] = $vl->target_id;
+	}
+
+	if($entity->get('field_reference')->value == '1'){ //1= products reference selected..
+	  
+        if(!empty($req_prodrefernce)){	  
+                $delete_id_arr = array_diff($db_chapter_info,$req_prodrefernce);
+                foreach($delete_id_arr as $p_id){
+                        db_update('product_features')
+                                ->fields(array('status' => 0))
+                                ->condition('product_id', $p_id)
+                                ->condition('feature_id', $specid)
+                                ->execute();
+                } 
+        }else{
+                foreach($db_chapter_info as $p_id){
+                $num_deleted2 = db_delete('product_features')
+                          ->condition('product_id', $p_id)
+                          ->condition('feature_id', $specid)
+                          ->execute();
+                }
+        }	   
+	}elseif($entity->get('field_reference')->value == '0'){ //0= category reference selected..	    
+        foreach($entity->get('field_category_reference') as $cats){		
+		        $catid = $cats->target_id;
+			$allcat[$catid] = $catid;
+			$tree = \Drupal::entityTypeManager()->getStorage('taxonomy_term')->loadTree('product_groups', $catid, NULL, TRUE);
+            if (!empty($tree)) {
+                foreach ($tree as $term) {
+                    $getcat = \Drupal\taxonomy\Entity\Term::load($term->get('tid')->value);                
+                    $allcat[$term->id()] = $term->id();                 
+                }
+            } else {
+                $allcat[$catid] = $catid;
+            }
+	}
+		
+	    $products = \Drupal::database()->select('node__field_category', 'gfd');
+        $products->join('node_field_data', 'nfd', 'nfd.nid=gfd.entity_id');
+        $products->leftjoin('node__field_is_series_product', 'sp', 'sp.entity_id=gfd.entity_id');
+        $products->leftjoin('taxonomy_term_field_data', 'ttfd', 'ttfd.tid=gfd.field_category_target_id');
+        $products->fields('gfd', array('entity_id'));
+	    $products->fields('nfd', array('created'));
+        $products->condition('nfd.status', 1);
+        $products->condition('sp.field_is_series_product_value', 1, '!=');
+        $products->condition('gfd.field_category_target_id', $allcat, 'IN');
+        $products->orderBy('ttfd.weight', 'ASC');
+    	$products->orderBy('nfd.created', 'ASC');
+        $product_ids = $products->execute()->fetchAll();
+        foreach ($product_ids as  $pid) {
+          $req_productids[] = $pid->entity_id;  
+        }
+		
+        if(!empty($req_productids)){	  
+               $delete_id_arr = array_diff($db_chapter_info,$req_productids);
+               foreach($delete_id_arr as $p_id){
+                       db_update('product_features')
+                               ->fields(array('status' => 0))
+                               ->condition('product_id', $p_id)
+                               ->condition('feature_id', $specid)
+                               ->execute();
+               }
+        }else{
+            foreach($db_chapter_info as $p_id){
+            $num_deleted2 = db_delete('product_features')
+                         ->condition('product_id', $p_id)
+                         ->condition('feature_id', $specid)
+                         ->execute();
+               }
+        }	
+		
+	}
+    
+ }
+}

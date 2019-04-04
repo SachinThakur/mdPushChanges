@@ -1,0 +1,184 @@
+{#
+/**
+* @file
+* Theme override to display a node.
+*
+* Available variables:
+* - node: The node entity with limited access to object properties and methods.
+Only "getter" methods (method names starting with "get", "has", or "is")
+and a few common methods such as "id" and "label" are available. Calling
+other methods (such as node.delete) will result in an exception.
+* - label: The title of the node.
+* - content: All node items. Use {{ content }} to print them all,
+*   or print a subset such as {{ content.field_example }}. Use
+*   {{ content|without('field_example') }} to temporarily suppress the printing
+*   of a given child element.
+* - author_picture: The node author user entity, rendered using the "compact"
+*   view mode.
+* - metadata: Metadata for this node.
+* - date: Themed creation date field.
+* - author_name: Themed author name field.
+* - url: Direct URL of the current node.
+* - display_submitted: Whether submission information should be displayed.
+* - attributes: HTML attributes for the containing element.
+*   The attributes.class element may contain one or more of the following
+*   classes:
+*   - node: The current template type (also known as a "theming hook").
+*   - node--type-[type]: The current node type. For example, if the node is an
+*     "Article" it would result in "node--type-article". Note that the machine
+*     name will often be in a short form of the human readable label.
+*   - node--view-mode-[view_mode]: The View Mode of the node; for example, a
+*     teaser would result in: "node--view-mode-teaser", and
+*     full: "node--view-mode-full".
+*   The following are controlled through the node publishing options.
+*   - node--promoted: Appears on nodes promoted to the front page.
+*   - node--sticky: Appears on nodes ordered above other non-sticky nodes in
+*     teaser listings.
+*   - node--unpublished: Appears on unpublished nodes visible only to site
+*     admins.
+* - title_attributes: Same as attributes, except applied to the main title
+*   tag that appears in the template.
+* - content_attributes: Same as attributes, except applied to the main
+*   content tag that appears in the template.
+* - author_attributes: Same as attributes, except applied to the author of
+*   the node tag that appears in the template.
+* - title_prefix: Additional output populated by modules, intended to be
+*   displayed in front of the main title tag that appears in the template.
+* - title_suffix: Additional output populated by modules, intended to be
+*   displayed after the main title tag that appears in the template.
+* - view_mode: View mode; for example, "teaser" or "full".
+* - teaser: Flag for the teaser state. Will be true if view_mode is 'teaser'.
+* - page: Flag for the full page state. Will be true if view_mode is 'full'.
+* - readmore: Flag for more state. Will be true if the teaser content of the
+*   node cannot hold the main body content.
+* - logged_in: Flag for authenticated user status. Will be true when the
+*   current user is a logged-in member.
+* - is_admin: Flag for admin user status. Will be true when the current user
+*   is an administrator.
+*
+* @ingroup templates
+*
+* @see template_preprocess_node()
+*
+* @todo Remove the id attribute (or make it a class), because if that gets
+*   rendered twice on a page this is invalid CSS for example: two lists
+*   in different view modes.
+*/
+#}
+{{ attach_library('moldev/campaign') }} 
+{% set classes = [ node.bundle|clean_class, node.isPromoted() ? 'is-promoted', node.isSticky() ? 'is-sticky', not node.isPublished() ? 'is-unpublished', view_mode ? view_mode|clean_class, 'clearfix', ] %}
+
+<style>
+    .bannerWrap {
+        display: none;
+    }
+</style>
+{{ attach_library('moldev/appdetail-page') }}
+{{ title_prefix }} {% if not page %}
+<a href="{{ url }}" rel="bookmark">{{ label }}</a>
+</h2>
+{% endif %} {{ title_suffix }} {% if display_submitted %}
+<footer>
+    {{ author_picture }} {% trans %}Submitted by {{ author_name }} on {{ date }}{% endtrans %} {{ metadata }}
+    </div>
+</footer>
+{% endif %}
+<!-- {{ content }} -->
+<!--Section Body-->
+<section>
+    <!-- Banner -->
+
+    <section class="ebook-banner cellular-image timer-header" style="background-image: url('/themes/moldev/images/campaign/timer-bg.jpg');">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12 white-text text-center">
+                    <h2>Stay compliant in GMP/GLP labs <br>Upgrade to SoftMax Pro 7.1 GxP today</h2>
+                    <h4>The countdown to Windows 7 end-of-life has begun!</h4>
+					<div id="countdown3" class="ClassyCountdownDemo"></div>
+                </div>               
+            </div>
+        </div>
+    </section>
+    <section class="ebook-after-banner-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12 ebook-after-banner-title">
+                    <h1>Windows 7 support ends on January 14, 2020 – are you prepared?</h1>
+                </div>
+            </div>
+        </div>
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-6 left-part">
+                    <div class="ebook-after-banner-wrapper">
+                        <h2>What does Windows 7 EOL mean and why should you care?</h2>
+
+                        <p>EOL or End-of-life is the expiration of a software or service&mdash;and after January 14, 2020, <a href="https://www.microsoft.com/en-us/windowsforbusiness/end-of-windows-7-support" target="_blank">Microsoft Support</a> will no longer provide security or feature updates to support PCs running Windows 7.</p>
+                        <p>You may continue to use your product and will  continue to work as normal, however you are at greater security risk and susceptible to compatibility issues if you continue to use it. </p>
+                    </div>    
+                </div>
+                <div class="col-sm-6 right-part">
+                    <div class="ebook-after-banner-wrapper">
+                        <h2>How does Windows 7 EOL  affect users of SoftMax Pro GxP? </h2>
+                        <p>SoftMax&reg; Pro GxP Software users with version <b>6.5 or earlier</b> and with Windows 7 operating system may continue to use the software as normal and Windows will operate as usual, but will stop receiving security and feature updates. For laboratories in regulated environments, you stand a greater chance of vulnerability.</p>
+						
+						<p>SoftMax Pro 7.1 GxP was designed to take full advantage of Windows 10 OS – built for business with enterprise-grade security, enhanced productivity, and the latest features to get more done. If you plan to migrate to the Windows 10 platform, consider upgrading your software version to the latest SoftMax Pro 7.1 GxP to avoid compatibility issues.</p>
+                    </div>    
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class="register-ebook cell-register timer-form-wrap" name="register-ebook" id="register-ebook" style="background-image: url('/themes/moldev/images/campaign/timer-form-bg.jpg');">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12 register-ebook-title">
+                    <h1>Contact us to discuss the benefits of upgrading to Windows 10 compatible SoftMax Pro 7.1 GxP </h1>
+                </div>
+            </div>
+        </div>        
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-6 white-text">
+                    <h2>Now is the best time to upgrade</h2>
+                    <p>SoftMax Pro 7.1 GxP Software is Windows 10 compatible and the most secure software to achieve full FDA 21 CFR Part 11 compliance with streamlined workflows to ensure data integrity.  </p>
+                    
+                    <ul>
+                        <li>Track and record all changes with the system audit trail </li>
+                        <li>Enable enterprise-level document sharing with Microsoft SQL database </li>
+                        <li>Gain complete control over file access permissions </li>
+                        <li>Maintain data integrity with eSignatures and document workflows </li>
+                        <li>Reduce IT support with Windows active directory 
+						</li>
+                    </ul>
+                </div>
+                <div class="col-sm-6">
+                    <div class="ebook-form" id="ebookfrm">
+                        <h4 class="small-size-font">I'm interested in upgrading to </h4>
+                        <h4 class="large-size-font">SoftMax Pro 7.1 GXP Software</h4>
+                        <iframe id="iframecontentcgxp" src="https://go.moleculardevices.com/l/83942/2019-02-28/bdxt3k?Line_of_Business=BioResearch&Product_Family=SoftMax Pro GxP&Primary_Application=SoftMax Pro GxP Software" style="min-height: 0px; width: 1px; min-width: 100%; overflow: hidden; height: 501px;" scrolling="no"></iframe>
+                        <script src="https://cdnjs.cloudflare.com/ajax/libs/iframe-resizer/3.5.16/iframeResizer.min.js" integrity="sha256-55VLYmU+PX1ae0VViacjjWYd+669GGULxLnYIImrcVY=" crossorigin="anonymous"></script>
+						<script>iFrameResize({log:true}, "#iframecontentcgxp")</script> 
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </section>
+    <section class="frm-after-section" style="background-image: url('/themes/moldev/images/campaign/footer-top-bg.jpg');"">
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm-12 ">
+                        <h1>Contact us for a free consultation</h1>
+                        <h2>Migrating to Windows 10 Pro is inevitable. Let us help ease the transition.</h2>
+
+                        <p>Our expert team will partner with you to set up single- or enterprise-level software and provide IQOQ services using our validation package to establish full compliance on your microplate readers. Major data privacy and security improvements support the latest GDPR regulations.</p>
+
+                        <a class="touch-btn" href="#ebookfrm">Get in touch</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+</section>
+<!--Section Body-->
+</div>
+</article>
