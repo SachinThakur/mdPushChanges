@@ -1,0 +1,98 @@
+.testimonials{color:#0066a4; padding-top: 30px; padding-bottom: 30px}
+.testimonial-img{width:100%;overflow:hidden;}
+.testimonial-img img{width:100%;}
+.customer-story-top-bg .bannerInnerPages{padding-bottom:60px;}
+.testimonials p{font-size: 24px;display: table; font-family: 'proxima_nova_rgbold';}
+.testimonials p i{display: table-cell;padding-right: 20px;}
+.customer-story-top-bg .testimonials p {
+    margin-top: 0;
+}
+.customer-story-top-bg .testimonials {
+    padding-bottom: 0;
+}
+.testimonials p label{display: block;font-size: 14px;margin-top: 10px;}
+.video-container p {font-size: 18px;}
+.solution-section .citations-count-container{margin-bottom: 50px;float: right;width: calc(100% - 50px);}
+.solution-section .citations-count-container h2 {margin: 0px 0px 20px 0px;}
+.citations-count-container span {font-size: 18px;letter-spacing: 1px;}
+.citations-count-container h2, .citations-count-container span, .citiation-count h2 {font-weight: 100;font-family: 'proxima_nova_rgbold';color:#0066a4}
+.solution-section .citations_inner h2 {font-weight: 100;font-family: 'proxima_nova_rgbold';color:#0066a4}
+.citations_inner p span {font-family: 'proxima_nova_rgbold';}
+.solution-section .citations_inner h2,.solution-section .citations_inner h3,.solution-section .citations_inner h4,.solution-section .citations_inner h5,.solution-section .citations_inner h6,.solution-section .citations_inner span,.solution-section .citations_inner ul li,.solution-section .citations_inner a,.solution-section .citations_inner p   {color:#0066a4;}
+.citations_inner{}
+.solution-section .bullet-listing,.cs-section .bullet-listing{padding-left: 40px;}
+.solution-section .citations-container{border-left: 1px solid #f0f1f2}
+.cs-section .carolusel-container .owl-carousel {width:100% ! important;}
+.cs-section .carolusel-container{text-align: left;}
+.cs-section .product-container{padding:0px;margin: 25px 0px;}
+.cs-section .bullet-listing li{color:#fff;}
+.cs-section .product-details h4{font-size: 18px;margin-bottom: 10px;}
+.ins-nav-container{padding:0px 15px;}
+.ins-nav-container a, .ins-nav-container div.linkBtn{font-size: 12px;text-align: right;display: block; color:#fff !important; text-transform:inherit; display: inline-flex; float: right;}
+/* .ins-nav-container a span.icon-flip, .ins-nav-container div.linkBtn span.icon-flip{padding-right:10px;}
+.ins-nav-container a span.icon-icon_link, .ins-nav-container div.linkBtn span.icon-icon_link{padding-left:10px;position: static;color: #fff;width: auto;height: auto;margin: 0px; cursor:pointer;} */
+.leadership_close.close img { max-width: 100%; }
+.leadership_close.close { width: 50px; height: 50px; opacity: 1; background: none; margin-right: 8px; }
+.leadership_close.close { margin-top: -60px; }
+.leadership_popup { margin-top: 90px; }
+.ins-nav-container a i.icon-flip, .ins-nav-container div.linkBtn i.icon-flip{padding-right:10px;}
+.ins-nav-container a i.icon-icon_link, .ins-nav-container div.linkBtn i.icon-icon_link{padding-left:10px;position: static;color: #fff;width: auto;height: auto;margin: 0px; cursor:pointer;}
+.ins-nav-container div.linkBtn span{padding-left:0;line-height: 18px;}
+@-moz-document url-prefix() {
+    .ins-nav-container .linkBtn .icon-icon_link.icon-flip {
+    margin-top: 2px;
+}
+.ins-nav-container div.linkBtn span {
+    line-height: 18px;
+}
+}
+.counter_slide div.owl-nav{display:none;}
+.no_marg_form .form-group{margin-bottom:0;}
+.pro-dsc-wrapper{padding-left: 30px;}
+section.result-section .testimonials{margin: 35px 0px;}
+section.result-section .testimonials em{padding-right: 120px;display: block;}
+.col-md-12.share-story {margin: 50px 0px;border-top: 1px solid #f1f2f3;border-bottom: 1px solid #f1f2f3;}
+.share-story .socialLinks li a i{color:#0066a4;}
+.share-story .socialLinks h4{margin-bottom: 15px;}
+.share-story .border-right-1{border-right: 1px solid #f1f2f3;}
+.share-story .share-story-inner{padding: 40px 0px; border-top:1px solid #f1f2f3; border-bottom:1px solid #f1f2f3;}
+.share-story .share-story-inner h3{ margin:0px;color:#34393d;padding-left: 50px;}
+.share-story-inner a{ float: right;}
+.references h3{ margin-top: 0px;font-weight: bold;margin-bottom: 30px;}
+.references p a{ color: #0066a4;}
+.customer-name label{ font-family: 'proxima_nova_rgbold'; }
+.cs-section .featured-applications-div{margin-left:0; margin-right:0;}
+.cs-section .carolusel-container .owl-carousel .owl-item{padding:0;}
+.owl-carousel-thumb .owl-item{padding:0; float:left;}
+.cs-section .carolusel-container .owl-carousel .owl-item .product-container:hover{transform:scale(1);}
+/*.citations-count-container span{text-transform: uppercase}*/
+.btn.bdr-btn:hover{color:#0066a4;}
+@media (max-width: 991px) {
+.pro-dsc-wrapper ul li {
+font-size: 14px;
+}
+.image-container {
+margin-bottom: 20px;
+}
+.testimonials p {font-size: 18px;}
+.ins-nav-container a{text-align: center;}
+.pro-dsc-wrapper{padding-left: 0px;}
+.solution-section .bullet-listing, .cs-section .bullet-listing{padding-left: 15px;}
+.pro-dsc-wrapper .button-wrap a{/* width: 100%; */font-size: 14px;}
+section.result-section .testimonials em{padding-right:0px;}
+.share-story .socialLinks h4{text-align: center;}
+.share-story .border-right-1{border:none;}
+.share-story .share-story-inner h3{padding-left: 0px;}
+.share-story .share-story-inner{padding: 20px 0px;text-align: center;display: inline-block;width: 100%;}
+.share-story .share-story-inner .socialLinks ul li{display:inline-block; vertical-align:top; float:none;}
+.share-story-inner a {float:none;}
+.col-md-12.share-story{margin: 50px 0px 0px 0px;}
+.solution-section .citations-container{border-left:none; margin-top:30px;}
+.solution-section .citations-count-container{width:100%; margin-bottom:0;}
+.solution-section .citations-count-container:first-child{margin-bottom:30px;}
+}
+
+.cs_thumb_slid{width:100%; height:189px; margin:35px auto 0; display:table; table-layout:fixed;}
+.cs_thumb_slid .cs_thumb_slid_cell{display:table-cell; text-align:center; vertical-align:middle;}
+.cs_thumb_slid .cs_thumb_slid_cell img{display:block; margin:0 auto; height:inherit; width:inherit; max-height:189px; max-width:100%;}
+.references-section{padding-bottom: 0px;}
